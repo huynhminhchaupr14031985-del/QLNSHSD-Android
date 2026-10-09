@@ -22,14 +22,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build Webview App
+      - name: Accept Licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Build APK with Cordova
         run: |
           npm install -g cordova
           cordova create app com.qlnshsd.app QLNSHSD
           cd app
           cp -r ../. www/ || true
           cordova platform add android
-          cordova build android --debug
+          cordova build android --no-telemetry
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
