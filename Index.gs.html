@@ -1,0 +1,1764 @@
+<!doctype html>
+
+<html lang="vi">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<meta
+  name="theme-color"
+  content="#18804b"
+>
+
+<title>Quản lý NSX – HSD</title>
+
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f6f5;
+  color:#222;
+}
+
+.header{
+  background:#18804b;
+  color:#fff;
+  padding:8px 12px 10px;
+}
+
+.title{
+  font-size:15px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.search{
+  width:100%;
+  border:0;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:14px;
+}
+
+.container{
+  padding:8px;
+  max-width:720px;
+  margin:auto;
+}
+
+.tabs{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr 1fr;
+  gap:4px;
+  margin-bottom:8px;
+}
+
+.tab{
+  border:0;
+  border-radius:7px;
+  background:#18804b;
+  color:#fff;
+  padding:8px 4px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.tab.active{
+  background:#0d6339;
+}
+
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:8px;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  text-align:center;
+}
+
+.summary-item{
+  padding:4px 2px;
+}
+
+.summary-number{
+  font-size:17px;
+  font-weight:bold;
+}
+
+.summary-label{
+  font-size:11px;
+}
+
+.form-row{
+  margin-bottom:10px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:4px;
+}
+
+input,
+textarea,
+select{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:7px;
+  padding:9px;
+  font-size:14px;
+  background:#fff;
+}
+
+textarea{
+  min-height:65px;
+}
+
+.btn{
+  border:0;
+  border-radius:7px;
+  padding:9px 12px;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.btn-green{
+  background:#18804b;
+  color:white;
+}
+
+.btn-red{
+  background:#d93025;
+  color:white;
+}
+
+.btn-gray{
+  background:#eee;
+}
+
+.full{
+  width:100%;
+}
+
+.product-results{
+  border:1px solid #ddd;
+  border-radius:7px;
+  margin-top:4px;
+  background:white;
+  overflow:hidden;
+}
+
+.product-result{
+  padding:9px;
+  border-bottom:1px solid #eee;
+  font-size:13px;
+}
+
+.product-result:last-child{
+  border-bottom:0;
+}
+
+.status{
+  display:inline-block;
+  padding:4px 7px;
+  border-radius:5px;
+  font-size:12px;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.status-ok{
+  background:#dff3e7;
+  color:#137333;
+}
+
+.status-warn{
+  background:#fff1c7;
+  color:#9a6700;
+}
+
+.status-bad{
+  background:#ffdcd9;
+  color:#b3261e;
+}
+
+.move{
+  background:#edf5ff;
+  border-left:4px solid #2878d4;
+  padding:7px;
+  border-radius:4px;
+  margin-top:7px;
+  font-size:13px;
+}
+
+.lot{
+  background:#fff;
+  border-radius:9px;
+  padding:11px;
+  margin-bottom:8px;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+
+.lot-name{
+  font-size:14px;
+  font-weight:bold;
+}
+
+.lot-info{
+  font-size:13px;
+  line-height:1.55;
+  margin-top:3px;
+}
+
+.percent{
+  font-size:12px;
+  margin-top:6px;
+}
+
+.delete-row{
+  text-align:right;
+  margin-top:8px;
+}
+
+.empty{
+  text-align:center;
+  color:#777;
+  padding:18px 5px;
+  font-size:13px;
+}
+
+.message{
+  display:none;
+  padding:9px;
+  border-radius:7px;
+  margin-bottom:8px;
+  font-size:13px;
+}
+
+.success{
+  display:block;
+  background:#dff3e7;
+  color:#137333;
+}
+
+.error{
+  display:block;
+  background:#ffdcd9;
+  color:#b3261e;
+}
+
+.hidden{
+  display:none;
+}
+
+@media(max-width:500px){
+
+  .summary-number{
+    font-size:16px;
+  }
+
+  .summary-label{
+    font-size:10px;
+  }
+
+  .tab{
+    font-size:11px;
+    padding:8px 2px;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+  <div class="title">
+    📦 Quản lý NSX – HSD
+  </div>
+
+  <input
+    class="search"
+    id="globalSearch"
+    placeholder="Tìm mã hoặc tên hàng"
+    oninput="globalSearch()"
+  >
+
+</div>
+
+
+<div class="container">
+
+
+<div id="message"></div>
+
+
+<!-- =====================
+     TAB
+===================== -->
+
+<div class="tabs">
+
+  <button
+    class="tab active"
+    id="tabHome"
+    onclick="showPage('home')"
+  >
+    🏠 Tổng quan
+  </button>
+
+  <button
+    class="tab"
+    id="tabAdd"
+    onclick="showPage('add')"
+  >
+    ➕ Nhập HSD
+  </button>
+
+  <button
+    class="tab"
+    id="tabList"
+    onclick="showPage('list')"
+  >
+    📋 Danh sách
+  </button>
+
+  <button
+    class="tab"
+    id="tabMove"
+    onclick="showPage('move')"
+  >
+    ⚠️ Lùi hàng
+  </button>
+
+</div>
+
+
+<!-- =====================
+     TỔNG QUAN
+===================== -->
+
+<div id="homePage">
+
+
+<div class="card">
+
+  <div class="summary">
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="total"
+      >0</div>
+
+      <div class="summary-label">
+        Tổng lô
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="ok"
+      >0</div>
+
+      <div class="summary-label">
+        Chưa lùi
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="moveCount"
+      >0</div>
+
+      <div class="summary-label">
+        Cần lùi
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="today"
+      >0</div>
+
+      <div class="summary-label">
+        Hôm nay
+      </div>
+    </div>
+
+
+  </div>
+
+
+  <div
+    style="
+      text-align:center;
+      margin-top:8px;
+    "
+  >
+
+    <b id="expired">
+      0
+    </b>
+
+    <div class="summary-label">
+      Hết hạn
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="card">
+
+  <b>
+    Tra cứu sản phẩm
+  </b>
+
+  <p
+    style="
+      color:#777;
+      font-size:12px;
+      margin-bottom:0;
+    "
+  >
+    Nhập mã hoặc tên hàng ở ô tìm kiếm phía trên.
+  </p>
+
+</div>
+
+
+<div
+  id="homeLots"
+></div>
+
+
+</div>
+
+
+<!-- =====================
+     NHẬP HSD
+===================== -->
+
+<div
+  id="addPage"
+  class="hidden"
+>
+
+
+<div class="card">
+
+  <b>➕ Nhập thông tin số lô</b>
+
+
+  <div class="form-row">
+
+    <label>
+      Tìm sản phẩm
+    </label>
+
+    <input
+      id="productSearch"
+      placeholder="Nhập mã hoặc tên hàng..."
+      oninput="searchProduct()"
+    >
+
+    <div
+      id="productResults"
+      class="product-results hidden"
+    ></div>
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Mã sản phẩm
+    </label>
+
+    <div style="display:flex;gap:8px;align-items:center">
+
+      <input
+        id="code"
+        placeholder="Mã sản phẩm"
+        style="flex:1"
+      >
+
+      <button
+        type="button"
+        class="btn btn-green"
+        onclick="startNativeScanner()"
+        title="Quét mã vạch"
+        style="white-space:nowrap"
+      >
+        📷 Quét
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Tên sản phẩm
+    </label>
+
+    <input
+      id="name"
+      readonly
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ngày sản xuất
+    </label>
+
+    <input
+      type="date"
+      id="nsx"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Hạn sử dụng
+    </label>
+
+    <input
+      type="date"
+      id="hsd"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ngày nhập
+    </label>
+
+    <input
+      type="date"
+      id="entry"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Số lượng
+    </label>
+
+    <input
+      type="number"
+      id="qty"
+      value="1"
+      min="0"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Vị trí
+    </label>
+
+    <input
+      id="loc"
+      placeholder="Kho / kệ / vị trí"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ghi chú
+    </label>
+
+    <textarea
+      id="note"
+    ></textarea>
+
+  </div>
+
+
+  <button
+    class="btn btn-green full"
+    onclick="saveLot()"
+  >
+    💾 LƯU SỐ LÔ
+  </button>
+
+
+</div>
+
+
+</div>
+
+
+<!-- =====================
+     DANH SÁCH
+===================== -->
+
+<div
+  id="listPage"
+  class="hidden"
+>
+
+
+<div class="card">
+
+  <div
+    style="
+      display:flex;
+      gap:5px;
+    "
+  >
+
+    <select
+      id="filter"
+      onchange="loadLots()"
+      style="flex:1"
+    >
+
+      <option value="all">
+        Tất cả
+      </option>
+
+      <option value="Chưa đến hạn lùi hàng">
+        Chưa đến hạn lùi hàng
+      </option>
+
+      <option value="Đã đến hạn lùi hàng">
+        Đã đến hạn lùi hàng
+      </option>
+
+      <option value="Đến hạn lùi hàng hôm nay">
+        Đến hạn hôm nay
+      </option>
+
+      <option value="Hết hạn hôm nay">
+        Hết hạn hôm nay
+      </option>
+
+      <option value="Đã hết hạn">
+        Đã hết hạn
+      </option>
+
+    </select>
+
+
+    <button
+      class="btn btn-gray"
+      onclick="loadLots()"
+    >
+      🔄
+    </button>
+
+  </div>
+
+</div>
+
+
+<div id="list"></div>
+
+
+</div>
+
+
+<!-- =====================
+     LÙI HÀNG
+===================== -->
+
+<div
+  id="movePage"
+  class="hidden"
+>
+
+<div id="moveLots"></div>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+
+let ALL_LOTS = [];
+
+
+/* =========================
+   HIỂN THỊ THÔNG BÁO
+========================= */
+
+function message(text,type){
+
+  const el =
+    document.getElementById(
+      "message"
+    );
+
+
+  el.innerText =
+    text;
+
+
+  el.className =
+    "message " +
+    (
+      type === "error"
+        ? "error"
+        : "success"
+    );
+
+
+  setTimeout(function(){
+
+    el.className = "";
+
+    el.innerText = "";
+
+  },4000);
+}
+
+
+/* =========================
+   CHUYỂN TAB
+========================= */
+
+function showPage(page){
+
+  const pages = [
+    "home",
+    "add",
+    "list",
+    "move"
+  ];
+
+
+  pages.forEach(function(p){
+
+    document
+      .getElementById(
+        p + "Page"
+      )
+      .classList.add("hidden");
+
+
+    document
+      .getElementById(
+        "tab" +
+        p.charAt(0).toUpperCase() +
+        p.slice(1)
+      )
+      .classList.remove("active");
+
+  });
+
+
+  document
+    .getElementById(
+      page + "Page"
+    )
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById(
+      "tab" +
+      page.charAt(0).toUpperCase() +
+      page.slice(1)
+    )
+    .classList.add("active");
+
+
+  if(page === "home"){
+    loadLots();
+  }
+
+
+  if(page === "list"){
+    loadLots();
+  }
+
+
+  if(page === "move"){
+    loadMoveLots();
+  }
+
+}
+
+
+/* =========================
+   QUÉT MÃ VẠCH ANDROID
+========================= */
+
+function startNativeScanner(){
+
+  if (window.AndroidScanner &&
+      typeof window.AndroidScanner.startScanner === "function") {
+
+    window.AndroidScanner.startScanner();
+    return;
+  }
+
+  message(
+    "📷 Chức năng quét mã dùng trong ứng dụng Android.",
+    "error"
+  );
+}
+
+
+// Android gọi hàm này sau khi quét thành công.
+function setScannedCode(code){
+
+  code = String(code || "").trim();
+
+  if (!code) return;
+
+  const codeEl = document.getElementById("code");
+  const searchEl = document.getElementById("productSearch");
+
+  if (codeEl) codeEl.value = code;
+  if (searchEl) searchEl.value = code;
+
+  // Tự động tra tên sản phẩm theo mã vừa quét.
+  google.script.run
+    .withSuccessHandler(function(product){
+
+      if (product) {
+        selectProduct(product.code, product.name);
+        message("✅ Đã quét: " + product.code, "success");
+      } else {
+        if (codeEl) codeEl.value = code;
+        message("⚠️ Đã quét mã " + code + ". Chưa có mã này trong danh mục.", "error");
+      }
+
+    })
+    .withFailureHandler(function(err){
+      message("❌ Không tra được sản phẩm: " + (err.message || err), "error");
+    })
+    .getProduct(code);
+}
+
+
+/* =========================
+   TÌM SẢN PHẨM
+========================= */
+
+let searchTimer;
+
+
+function searchProduct(){
+
+  clearTimeout(
+    searchTimer
+  );
+
+
+  searchTimer =
+    setTimeout(function(){
+
+      const q =
+        document
+          .getElementById(
+            "productSearch"
+          )
+          .value
+          .trim();
+
+
+      google.script.run
+
+        .withSuccessHandler(
+          function(list){
+
+            const box =
+              document
+                .getElementById(
+                  "productResults"
+                );
+
+
+            if(
+              !list ||
+              list.length === 0
+            ){
+
+              box.classList.add(
+                "hidden"
+              );
+
+              return;
+            }
+
+
+            box.innerHTML =
+              list.map(function(x){
+
+                return `
+
+                  <div
+                    class="product-result"
+                    onclick='selectProduct(
+                      ${JSON.stringify(x.code)},
+                      ${JSON.stringify(x.name)}
+                    )'
+                  >
+
+                    <b>
+                      ${esc(x.code)}
+                    </b>
+
+                    -
+                    ${esc(x.name)}
+
+                  </div>
+
+                `;
+
+              }).join("");
+
+
+            box.classList.remove(
+              "hidden"
+            );
+
+          }
+        )
+
+        .withFailureHandler(
+          function(err){
+
+            message(
+              err.message || err,
+              "error"
+            );
+
+          }
+        )
+
+        .getProducts(q);
+
+    },250);
+}
+
+
+/* =========================
+   CHỌN SẢN PHẨM
+========================= */
+
+function selectProduct(
+  code,
+  name
+){
+
+  document.getElementById(
+    "code"
+  ).value = code;
+
+
+  document.getElementById(
+    "name"
+  ).value = name;
+
+
+  document.getElementById(
+    "productSearch"
+  ).value =
+    code + " - " + name;
+
+
+  document.getElementById(
+    "productResults"
+  ).classList.add(
+    "hidden"
+  );
+}
+
+
+/* =========================
+   LƯU SỐ LÔ
+========================= */
+
+function saveLot(){
+
+  const data = {
+
+    code:
+      document.getElementById(
+        "code"
+      ).value.trim(),
+
+    name:
+      document.getElementById(
+        "name"
+      ).value.trim(),
+
+    nsx:
+      document.getElementById(
+        "nsx"
+      ).value,
+
+    hsd:
+      document.getElementById(
+        "hsd"
+      ).value,
+
+    entry:
+      document.getElementById(
+        "entry"
+      ).value,
+
+    qty:
+      document.getElementById(
+        "qty"
+      ).value,
+
+    loc:
+      document.getElementById(
+        "loc"
+      ).value.trim(),
+
+    note:
+      document.getElementById(
+        "note"
+      ).value.trim()
+
+  };
+
+
+  if(!data.code){
+
+    message(
+      "Vui lòng chọn mã sản phẩm.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  if(
+    !data.nsx ||
+    !data.hsd ||
+    !data.entry
+  ){
+
+    message(
+      "Vui lòng nhập NSX, HSD và ngày nhập.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(res){
+
+        message(
+          "✅ Đã lưu số lô thành công.",
+          "success"
+        );
+
+
+        clearForm();
+
+
+        loadLots();
+
+
+        setTimeout(
+          function(){
+            showPage("list");
+          },
+          300
+        );
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          "❌ " +
+          (
+            err.message ||
+            err
+          ),
+          "error"
+        );
+
+      }
+    )
+
+    .saveLot(data);
+}
+
+
+/* =========================
+   XÓA FORM
+========================= */
+
+function clearForm(){
+
+  [
+    "productSearch",
+    "code",
+    "name",
+    "nsx",
+    "hsd",
+    "entry",
+    "loc",
+    "note"
+  ].forEach(function(id){
+
+    document.getElementById(
+      id
+    ).value = "";
+
+  });
+
+
+  document.getElementById(
+    "qty"
+  ).value = "1";
+
+}
+
+
+/* =========================
+   TẢI DANH SÁCH
+========================= */
+
+function loadLots(){
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(list){
+
+        ALL_LOTS =
+          list || [];
+
+
+        renderList(
+          ALL_LOTS
+        );
+
+
+        renderHome(
+          ALL_LOTS
+        );
+
+
+        renderMove(
+          ALL_LOTS
+        );
+
+
+        loadSummary();
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          err.message || err,
+          "error"
+        );
+
+      }
+    )
+
+    .getLots(
+      document.getElementById(
+        "filter"
+      )
+      ? document.getElementById(
+          "filter"
+        ).value
+      : "all"
+    );
+}
+
+
+/* =========================
+   HIỂN THỊ DANH SÁCH
+========================= */
+
+function renderList(list){
+
+  const box =
+    document.getElementById(
+      "list"
+    );
+
+
+  if(
+    !list ||
+    list.length === 0
+  ){
+
+    box.innerHTML =
+      `<div class="card empty">
+        Không có số lô.
+      </div>`;
+
+    return;
+  }
+
+
+  box.innerHTML =
+    list.map(
+      card
+    ).join("");
+}
+
+
+/* =========================
+   CARD SỐ LÔ
+================================ */
+
+function card(x){
+
+  let used =
+    Number(x.used);
+
+
+  let rem =
+    Number(x.rem);
+
+
+  if(
+    !Number.isFinite(used)
+  ){
+    used = 0;
+  }
+
+
+  if(
+    !Number.isFinite(rem)
+  ){
+    rem =
+      Math.max(
+        0,
+        100 - used
+      );
+  }
+
+
+  const status =
+    String(
+      x.status || ""
+    );
+
+
+  let statusClass =
+    "status-ok";
+
+
+  if(
+    status.includes("lùi")
+  ){
+    statusClass =
+      "status-warn";
+  }
+
+
+  if(
+    status.includes("hết")
+  ){
+    statusClass =
+      "status-bad";
+  }
+
+
+  return `
+
+    <div class="lot">
+
+      <div class="lot-name">
+        ${esc(x.name || "")}
+      </div>
+
+
+      <div class="lot-info">
+
+        Mã:
+        <b>${esc(x.code || "")}</b>
+
+        |
+        SL:
+        <b>${esc(x.qty ?? "")}</b>
+
+        <br>
+
+        NSX:
+        ${esc(x.nsx || "")}
+
+        |
+        HSD:
+        ${esc(x.hsd || "")}
+
+        <br>
+
+        Nhập:
+        ${esc(x.entry || "")}
+
+      </div>
+
+
+      <span
+        class="status ${statusClass}"
+      >
+        ${esc(status)}
+      </span>
+
+
+      <div class="move">
+
+        📅
+
+        <b>
+          Ngày lùi hàng 20%:
+          ${esc(x.move || "")}
+        </b>
+
+      </div>
+
+
+      <div class="percent">
+
+        Đã sử dụng khi nhập:
+
+        <b>
+          ${used.toFixed(1)}%
+        </b>
+
+        ·
+
+        Còn lại:
+
+        <b>
+          ${rem.toFixed(1)}%
+        </b>
+
+      </div>
+
+
+      ${
+        x.loc
+        ?
+        `<div class="lot-info">
+          📍 Vị trí:
+          ${esc(x.loc)}
+        </div>`
+        :
+        ""
+      }
+
+
+      ${
+        x.note
+        ?
+        `<div class="lot-info">
+          📝 ${esc(x.note)}
+        </div>`
+        :
+        ""
+      }
+
+
+      <!-- NÚT XÓA -->
+
+      <div class="delete-row">
+
+        <button
+          class="btn btn-red"
+          onclick='deleteLot(
+            ${JSON.stringify(String(x.id))}
+          )'
+        >
+          🗑️ Xóa số lô
+        </button>
+
+      </div>
+
+
+    </div>
+
+  `;
+}
+
+
+/* =========================
+   XÓA SỐ LÔ
+========================= */
+
+function deleteLot(id){
+
+  if(!id){
+
+    message(
+      "Không xác định được số lô.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const ok =
+    confirm(
+      "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
+      "Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách."
+    );
+
+
+  if(!ok){
+    return;
+  }
+
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(res){
+
+        message(
+          "🗑️ " +
+          (
+            res.message ||
+            "Đã xóa số lô."
+          ),
+          "success"
+        );
+
+
+        loadLots();
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          "❌ Không xóa được: " +
+          (
+            err.message ||
+            err
+          ),
+          "error"
+        );
+
+      }
+    )
+
+    .deleteLot(id);
+}
+
+
+/* =========================
+   TRANG LÙI HÀNG
+========================= */
+
+function loadMoveLots(){
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(list){
+
+        renderMove(
+          list || []
+        );
+
+      }
+    )
+
+    .getLots("all");
+}
+
+
+function renderMove(list){
+
+  const box =
+    document.getElementById(
+      "moveLots"
+    );
+
+
+  const arr =
+    (list || [])
+      .filter(function(x){
+
+        return (
+          x.status ===
+            "Đã đến hạn lùi hàng" ||
+
+          x.status ===
+            "Đến hạn lùi hàng hôm nay"
+        );
+
+      });
+
+
+  if(arr.length === 0){
+
+    box.innerHTML =
+      `<div class="card empty">
+        ✅ Hiện chưa có số lô cần lùi hàng.
+      </div>`;
+
+    return;
+  }
+
+
+  box.innerHTML =
+    arr.map(card).join("");
+}
+
+
+/* =========================
+   TRANG TỔNG QUAN
+========================= */
+
+function renderHome(list){
+
+  const box =
+    document.getElementById(
+      "homeLots"
+    );
+
+
+  if(!box){
+    return;
+  }
+
+
+  if(
+    !list ||
+    list.length === 0
+  ){
+
+    box.innerHTML = "";
+
+    return;
+  }
+
+
+  box.innerHTML =
+    list
+      .slice(0,5)
+      .map(card)
+      .join("");
+}
+
+
+/* =========================
+   TỔNG SỐ
+========================= */
+
+function loadSummary(){
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(s){
+
+        document.getElementById(
+          "total"
+        ).innerText =
+          s.total || 0;
+
+
+        document.getElementById(
+          "ok"
+        ).innerText =
+          s.ok || 0;
+
+
+        document.getElementById(
+          "moveCount"
+        ).innerText =
+          s.move || 0;
+
+
+        document.getElementById(
+          "today"
+        ).innerText =
+          s.today || 0;
+
+
+        document.getElementById(
+          "expired"
+        ).innerText =
+          s.expired || 0;
+
+      }
+    )
+
+    .getSummary();
+}
+
+
+/* =========================
+   TÌM KIẾM TRÊN DANH SÁCH
+========================= */
+
+function globalSearch(){
+
+  const q =
+    document
+      .getElementById(
+        "globalSearch"
+      )
+      .value
+      .toLowerCase()
+      .trim();
+
+
+  if(!q){
+
+    renderList(
+      ALL_LOTS
+    );
+
+    return;
+  }
+
+
+  const result =
+    ALL_LOTS.filter(
+      function(x){
+
+        return (
+          String(x.code || "")
+            .toLowerCase()
+            .includes(q) ||
+
+          String(x.name || "")
+            .toLowerCase()
+            .includes(q)
+        );
+
+      }
+    );
+
+
+  showPage("list");
+
+
+  renderList(result);
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function esc(value){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+}
+
+
+/* =========================
+   KHỞI ĐỘNG
+========================= */
+
+window.onload =
+  function(){
+
+    loadLots();
+
+  };
+
+
+</script>
+
+
+</body>
+
+</html>
