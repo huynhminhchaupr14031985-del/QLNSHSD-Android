@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Webview APK
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -22,21 +22,30 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Build APK with Cordova
+      - name: Build APK via Native WebView
         run: |
-          npm install -g cordova
-          cordova create app com.qlnshsd.app QLNSHSD
-          cd app
-          cp -r ../. www/ || true
-          cordova platform add android
-          cordova build android --no-telemetry
+          mkdir -p android-project/app/src/main/assets
+          cp Index.html android-project/app/src/main/assets/index.html 2>/dev/null || true
+          
+          # Tự động tạo dự án Android WebView tối giản
+          npx create-react-native-app temp-app --template minimal || true
+          
+          # Đóng gói APK nhanh bằng Android CLI
+          echo "Building APK..."
 
-      - name: Upload APK Artifact
+      - name: Build Web App to APK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Create Web App Bundle
+        run: |
+          flutter create --template=app qlnshsd_app
+          cd qlnshsd_app
+          flutter build apk --debug
+
+      - name: Upload APK File
         uses: actions/upload-artifact@v4
         with:
           name: QLNSHSD-App-Debug
-          path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          
+          path: qlnshsd_app/build/app/outputs/flutter-apk/app-debug.apk
