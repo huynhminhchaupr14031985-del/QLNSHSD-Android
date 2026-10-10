@@ -1,4 +1,4 @@
-name: Build Android Webview APK
+name: Build Android APK
 
 on:
   push:
@@ -19,33 +19,95 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Build APK via Native WebView
+      - name: Generate Android WebView Project
         run: |
-          mkdir -p android-project/app/src/main/assets
-          cp Index.html android-project/app/src/main/assets/index.html 2>/dev/null || true
-          
-          # Tự động tạo dự án Android WebView tối giản
-          npx create-react-native-app temp-app --template minimal || true
-          
-          # Đóng gói APK nhanh bằng Android CLI
-          echo "Building APK..."
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/java/com/qlnshsd/app
+          mkdir -p android/app/src/main/res/values
 
-      - name: Build Web App to APK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          
-      - name: Create Web App Bundle
+          # Copy file web vao assets
+          cp Index.html android/app/src/main/assets/index.html 2>/dev/null || echo "<h1>QLNSHSD App</h1>" > android/app/src/main/assets/index.html
+
+          # Tạo build.gradle
+          cat << 'EOF' > android/build.gradle
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.1' }
+          }
+          allprojects {
+              repositories { google(); mavenCentral() }
+          }
+          EOF
+
+          # Tạo app/build.gradle
+          cat << 'EOF' > android/app/build.gradle
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.qlnshsd.app'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.qlnshsd.app"
+                  minSdk 21
+                  targetSdk 33
+                  versionCode 1
+                  versionName "1.0"
+              }
+          }
+          EOF
+
+          # Tạo AndroidManifest.xml với đầy đủ quyền Camera để quét mã vạch
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.CAMERA" />
+              <application android:label="QLNSHSD" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          # Tạo MainActivity.java (Mở WebView)
+          cat << 'EOF' > android/app/src/main/java/com/qlnshsd/app/MainActivity.java
+          package com.qlnshsd.app;
+          import android.os.Bundle;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import androidx.appcompat.app.AppCompatActivity;
+
+          public class MainActivity extends AppCompatActivity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  WebView webView = new WebView(this);
+                  setContentView(webView);
+                  webView.getSettings().setJavaScriptEnabled(true);
+                  webView.getSettings().setDomStorageEnabled(true);
+                  webView.getSettings().setAllowFileAccess(true);
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.setWebChromeClient(new WebChromeClient());
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+          }
+          EOF
+
+          # Cấu hình Gradle Wrapper
+          gradle wrapper --gradle-version 8.0 --project-dir android
+
+      - name: Build APK with Gradle
         run: |
-          flutter create --template=app qlnshsd_app
-          cd qlnshsd_app
-          flutter build apk --debug
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      - name: Upload APK File
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: QLNSHSD-App-Debug
-          path: qlnshsd_app/build/app/outputs/flutter-apk/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
