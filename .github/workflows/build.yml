@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Generate Android Project Structure
+      - name: Create Android Project Structure
         run: |
           mkdir -p android/app/src/main/assets
           mkdir -p android/app/src/main/java/com/qlnshsd/app
@@ -108,14 +108,22 @@ jobs:
           }
           EOF
 
-          # Tự động sinh Gradle Wrapper chuẩn để biên dịch
+          # Tải trực tiếp Gradle Wrapper binary chuẩn về để tự động biên dịch mà không cần cài đặt gì thêm
           cd android
-          gradle wrapper --gradle-version 8.0
+          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.0.0/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
+          gradle_version=8.0
+          wget https://raw.githubusercontent.com/gradle/gradle/v$gradle_version/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar || true
+          
+          # Tạo file gradlew thủ công chạy độc lập
+          cat << 'EOF' > gradlew
+          #!/usr/bin/env sh
+          exec java -jar gradle/wrapper/gradle-wrapper.jar "$@"
+          EOF
+          chmod +x gradlew
 
-      - name: Build APK with Gradle Wrapper
+      - name: Build APK using Gradle Wrapper
         run: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
