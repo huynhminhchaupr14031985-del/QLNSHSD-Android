@@ -2,7 +2,9 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -16,70 +18,128 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Build Webview App
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.0'
+
+      - name: Create Android Project
         run: |
           mkdir -p android/app/src/main/java/com/qlnshsd/app
-          
-          cat << 'EOF' > android/build.gradle
-          allprojects { repositories { google(); mavenCentral() } }
+
+          cat > android/settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = 'QLNSHSD'
+          include ':app'
           EOF
 
-          cat << 'EOF' > android/app/build.gradle
-          plugins { id 'com.android.application' }
+          cat > android/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.1.4' apply false
+          }
+          EOF
+
+          cat > android/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
           android {
               namespace 'com.qlnshsd.app'
-              compileSdk 33
-              defaultConfig { applicationId "com.qlnshsd.app"; minSdk 21; targetSdk 33 }
+              compileSdk 34
+
+              defaultConfig {
+                  applicationId 'com.qlnshsd.app'
+                  minSdk 21
+                  targetSdk 28
+                  versionCode 1
+                  versionName '1.0'
+              }
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
           }
-          dependencies { implementation 'androidx.appcompat:appCompat:1.6.1' }
           EOF
 
-          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.CAMERA" />
-              <application android:label="QLNSHSD" android:usesCleartextTraffic="true">
-                  <activity android:name=".MainActivity" android:exported="true">
+
+              <application
+                  android:label="QLNSHSD"
+                  android:usesCleartextTraffic="true"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
+
                   </activity>
               </application>
           </manifest>
           EOF
 
-          # Thay LINK_WEB_APP_CUA_BAN bằng URL Google Apps Script của bạn ở dòng dưới đây
-          cat << 'EOF' > android/app/src/main/java/com/qlnshsd/app/MainActivity.java
+          cat > android/app/src/main/java/com/qlnshsd/app/MainActivity.java <<'EOF'
           package com.qlnshsd.app;
+
+          import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-          import androidx.appcompat.app.AppCompatActivity;
-          public class MainActivity extends AppCompatActivity {
+
+          public class MainActivity extends Activity {
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  WebView w = new WebView(this);
-                  setContentView(w);
-                  w.getSettings().setJavaScriptEnabled(true);
-                  w.getSettings().setDomStorageEnabled(true);
-                  w.loadUrl("ĐIỀN_URL_WEB_APP_GOOGLE_SCRIPT_VÀO_ĐÂY");
+
+                  WebView webView = new WebView(this);
+                  setContentView(webView);
+
+                  webView.getSettings().setJavaScriptEnabled(true);
+                  webView.getSettings().setDomStorageEnabled(true);
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.loadUrl(
+                      "THAY_BANG_URL_WEB_APP_CUA_BAN"
+                  );
               }
           }
           EOF
 
-          gradle wrapper --gradle-version 8.0 --project-dir android
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Build APK
+        run: |
+          gradle --version
+          gradle -p android assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: QL-NSX-HSD-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
+          if-no-files-found: error
