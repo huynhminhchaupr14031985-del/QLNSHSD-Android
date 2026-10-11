@@ -8,7 +8,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceError;
 import android.graphics.Bitmap;
-import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -34,14 +33,9 @@ public class MainActivity extends Activity {
 
             @Override
             public boolean shouldOverrideUrlLoading(
-                    WebView view, WebResourceRequest request) {
+                    WebView view,
+                    WebResourceRequest request) {
                 return false;
-            }
-
-            @Override
-            public void onPageStarted(
-                    WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
             }
 
             @Override
@@ -55,7 +49,7 @@ public class MainActivity extends Activity {
                 if (request.isForMainFrame()) {
                     Toast.makeText(
                         MainActivity.this,
-                        "Không tải được trang web. Vui lòng kiểm tra kết nối Internet.",
+                        "Không tải được trang. Hãy kiểm tra Internet và quyền truy cập.",
                         Toast.LENGTH_LONG
                     ).show();
                 }
@@ -63,7 +57,7 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl(
-            "https://script.google.com/macros/s/AKfycbxOveWjcHYT32TUwKOaOg1U4med7YyBhXuY3z64vYUKun5oXwng_6PGmpsdlvMa4wN3/exec"
+            "https://script.google.com/macros/s/AKfycbxd6iEfT-PZIfjZoU1tUp-auIOl1YX3fwfCcn1gFhpqonRs1Cg4VQ_G27mzWsTAMeVN/exec"
         );
     }
 
