@@ -19,38 +19,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create Android Project Structure
+      - name: Generate and Build App
         run: |
           mkdir -p android/app/src/main/assets
           mkdir -p android/app/src/main/java/com/qlnshsd/app
 
-          # Copy file Index.html vào thư mục assets của app Android
+          # Copy file Index.html vào thư mục assets
           cp Index.html android/app/src/main/assets/index.html 2>/dev/null || echo "<h1>QLNSHSD App</h1>" > android/app/src/main/assets/index.html
 
-          # Tạo file cấu hình root build.gradle
-          cat << 'EOF' > android/build.gradle
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.1'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          EOF
+          # Tạo cấu hình build.gradle gốc
+          echo "allprojects { repositories { google(); mavenCentral() } }" > android/build.gradle
 
           # Tạo file app/build.gradle
           cat << 'EOF' > android/app/build.gradle
-          plugins {
-              id 'com.android.application'
-          }
+          plugins { id 'com.android.application' }
           android {
               namespace 'com.qlnshsd.app'
               compileSdk 33
@@ -58,16 +40,11 @@ jobs:
                   applicationId "com.qlnshsd.app"
                   minSdk 21
                   targetSdk 33
-                  versionCode 1
-                  versionName "1.0"
               }
-          }
-          dependencies {
-              implementation 'androidx.appcompat:appCompat:1.6.1'
           }
           EOF
 
-          # Tạo AndroidManifest.xml (Cấp quyền Internet và Camera để quét mã vạch)
+          # Tạo AndroidManifest.xml
           cat << 'EOF' > android/app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
@@ -83,48 +60,30 @@ jobs:
           </manifest>
           EOF
 
-          # Tạo file MainActivity.java để mở giao diện Web App qua WebView
+          # Tạo file MainActivity.java
           cat << 'EOF' > android/app/src/main/java/com/qlnshsd/app/MainActivity.java
           package com.qlnshsd.app;
           import android.os.Bundle;
-          import android.webkit.WebSettings;
           import android.webkit.WebView;
-          import android.webkit.WebViewClient;
           import androidx.appcompat.app.AppCompatActivity;
-
           public class MainActivity extends AppCompatActivity {
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  WebView webView = new WebView(this);
-                  setContentView(webView);
-                  WebSettings webSettings = webView.getSettings();
-                  webSettings.setJavaScriptEnabled(true);
-                  webSettings.setDomStorageEnabled(true);
-                  webSettings.setAllowFileAccess(true);
-                  webView.setWebViewClient(new WebViewClient());
-                  webView.loadUrl("file:///android_asset/index.html");
+                  WebView w = new WebView(this);
+                  setContentView(w);
+                  w.getSettings().setJavaScriptEnabled(true);
+                  w.loadUrl("file:///android_asset/index.html");
               }
           }
           EOF
 
-          # Tải trực tiếp Gradle Wrapper binary chuẩn về để tự động biên dịch mà không cần cài đặt gì thêm
+          # Tiến hành build trực tiếp bằng công cụ dòng lệnh
           cd android
-          curl -s https://raw.githubusercontent.com/gradle/gradle/v8.0.0/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
-          gradle_version=8.0
-          wget https://raw.githubusercontent.com/gradle/gradle/v$gradle_version/gradle/wrapper/gradle-wrapper.jar -O gradle/wrapper/gradle-wrapper.jar || true
-          
-          # Tạo file gradlew thủ công chạy độc lập
-          cat << 'EOF' > gradlew
-          #!/usr/bin/env sh
-          exec java -jar gradle/wrapper/gradle-wrapper.jar "$@"
-          EOF
+          sdkmanager --install "platforms;android-33" || true
+          gradle wrapper --gradle-version 8.0
           chmod +x gradlew
-
-      - name: Build APK using Gradle Wrapper
-        run: |
-          cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
