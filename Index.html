@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#197a4b"><title>QL NSX - HSD</title>
+<style>
+body{margin:0;background:#f3f6f4;font-family:Arial;color:#17231d}header{background:#197a4b;color:white;padding:15px;position:sticky;top:0;z-index:3}
+h1{font-size:20px;margin:0 0 10px}main{max-width:900px;margin:auto;padding:12px}input,button,select,textarea{font:inherit;padding:11px;border-radius:10px;border:1px solid #ccd5d0;box-sizing:border-box}
+input,select,textarea{width:100%;background:white}button{background:#197a4b;color:white;font-weight:bold;border:0}.row{display:flex;gap:8px}.row>*:first-child{flex:1}
+.card{background:white;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 5px #0001}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.hidden{display:none}
+.item{padding:12px 0;border-top:1px solid #eee}.item:first-child{border-top:0}.ok{color:#17663b}.warn{color:#a35a00}.bad{color:#b3261e}
+.stat{display:inline-block;width:20%;padding:9px}.stat b{display:block;font-size:20px}small{color:#66736d}
+.badge{font-weight:bold}.movebox{background:#fff2d8;padding:7px;border-radius:8px;margin-top:6px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.stat{width:19%;font-size:11px}}
+</style></head><body>
+<header><h1>📦 Quản lý NSX – HSD</h1><div class="row"><input id="search" placeholder="Tìm mã hoặc tên hàng" oninput="findP()"><button onclick="scan()">📷</button></div></header>
+<main>
+<nav class="row"><button onclick="show('home')">🏠 Tổng quan</button><button onclick="show('add')">➕ Nhập HSD</button><button onclick="show('list')">📋 Danh sách</button><button onclick="show('move')">⚠️ Lùi hàng</button></nav>
+<section id="home"><div class="card"><div class="stat"><b id="total">0</b>Tổng lô</div><div class="stat"><b id="ok">0</b>Chưa lùi</div><div class="stat"><b id="mv">0</b>Cần lùi</div><div class="stat"><b id="today">0</b>Hôm nay</div><div class="stat"><b id="expired">0</b>Hết hạn</div></div><div class="card"><h3>Tra cứu sản phẩm</h3><div id="results">Nhập mã hoặc tên hàng.</div></div></section>
+<section id="add" class="hidden"><div class="card"><h3>➕ Nhập lô hàng</h3><div class="grid">
+<div class="full"><label>Mã SP / mã vạch</label><div class="row"><input id="code"><button onclick="scan()">📷</button></div></div>
+<div class="full"><label>Tên SP</label><input id="name" readonly></div>
+<div><label>NSX</label><input id="nsx" type="date"></div><div><label>HSD</label><input id="hsd" type="date"></div>
+<div><label>Ngày nhập</label><input id="entry" type="date"></div><div><label>Số lượng</label><input id="qty" type="number" value="1"></div>
+<div><label>Vị trí</label><input id="loc"></div><div><label>Ghi chú</label><input id="note"></div></div>
+<div id="calc" class="movebox">Nhập NSX và HSD để tính ngày lùi hàng 20%.</div><br><button onclick="save()">💾 Lưu lô</button></div></section>
+<section id="list" class="hidden"><div class="card"><select id="filter" onchange="load()"><option value="all">Tất cả</option><option value="Chưa đến hạn lùi hàng">Chưa đến hạn lùi hàng</option><option value="Đã đến hạn lùi hàng">Đã đến hạn lùi hàng</option><option value="Đến hạn lùi hàng hôm nay">Đến hạn lùi hàng hôm nay</option><option value="Hết hạn hôm nay">Hết hạn hôm nay</option><option value="Đã hết hạn">Đã hết hạn</option></select></div><div class="card" id="lots">Đang tải...</div></section>
+<section id="move" class="hidden"><div class="card"><h3>⚠️ Danh sách đến hạn lùi hàng</h3><div id="movelist">Đang tải...</div></div></section>
+</main>
+<script>
+function show(x){["home","add","list","move"].forEach(i=>document.getElementById(i).classList.toggle("hidden",i!=x));if(x=="list")load();if(x=="move")loadMove();summary()}
+function summary(){google.script.run.withSuccessHandler(x=>{total.textContent=x.total;ok.textContent=x.ok;mv.textContent=x.move;today.textContent=x.today;expired.textContent=x.expired}).getSummary()}
+function findP(){let q=search.value.trim();if(!q){results.textContent="Nhập mã hoặc tên hàng.";return}google.script.run.withSuccessHandler(a=>results.innerHTML=a.map(p=>`<div class="item"><b>${p.code}</b> – ${p.name}<br><button onclick="pick('${p.code}')">Chọn</button></div>`).join("")||"Không tìm thấy").getProducts(q)}
+function pick(c){show("add");code.value=c;google.script.run.withSuccessHandler(p=>name.value=p?p.name:"Chưa có trong danh mục").getProduct(c)}
+code.oninput=()=>{google.script.run.withSuccessHandler(p=>name.value=p?p.name:"Chưa có trong danh mục").getProduct(code.value.trim())}
+function calcMove(){if(!nsx.value||!hsd.value){calc.textContent="Nhập NSX và HSD để tính ngày lùi hàng 20%.";return}let a=new Date(nsx.value+"T00:00:00"),b=new Date(hsd.value+"T00:00:00"),days=Math.round((b-a)/86400000),m=new Date(a);m.setDate(m.getDate()+Math.round(days*.8));calc.innerHTML=`Tổng thời hạn: <b>${days} ngày</b><br>📅 <b>Ngày đến hạn lùi hàng 20%: ${m.toLocaleDateString("vi-VN")}</b><br><small>Tại mốc này còn khoảng 20% thời hạn.</small>`}
+nsx.onchange=calcMove;hsd.onchange=calcMove;entry.value=new Date().toISOString().slice(0,10)
+function save(){let o={code:code.value.trim(),name:name.value,nsx:nsx.value,hsd:hsd.value,entry:entry.value,qty:qty.value,loc:loc.value,note:note.value};google.script.run.withSuccessHandler(x=>{alert("Đã lưu.\nNgày lùi hàng 20%: "+x.move);show("list")}).withFailureHandler(e=>alert(e.message)).saveLot(o)}
+function card(x){let c=x.status.includes("lùi")?"warn":(x.status.includes("hết")?"bad":"ok");return `<div class="item"><b>${x.name}</b><br>Mã: ${x.code} | SL: ${x.qty}<br>NSX: ${x.nsx} | HSD: ${x.hsd} | Nhập: ${x.entry}<br><span class="${c}">${x.status}</span><div class="movebox">📅 <b>Ngày lùi hàng 20%: ${x.move}</b></div><small>Đã sử dụng khi nhập: ${Number(x.used).toFixed(1)}% · Còn lại: ${Number(x.rem).toFixed(1)}%</small></div>`}
+function load(){google.script.run.withSuccessHandler(a=>lots.innerHTML=a.map(card).join("")||"Chưa có dữ liệu").getLots(filter.value)}
+function loadMove(){google.script.run.withSuccessHandler(a=>movelist.innerHTML=a.filter(x=>x.status=="Đã đến hạn lùi hàng"||x.status=="Đến hạn lùi hàng hôm nay").map(card).join("")||"✅ Chưa có hàng đến hạn lùi.").getLots("all")}
+async function scan(){if(!("BarcodeDetector"in window)){alert("Trình duyệt chưa hỗ trợ quét mã trực tiếp. Hãy nhập mã.");return}try{let s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}),v=document.createElement("video");v.autoplay=true;v.playsInline=true;v.srcObject=s;let d=new BarcodeDetector({formats:await BarcodeDetector.getSupportedFormats()}),b=document.createElement("div");b.style="position:fixed;inset:0;background:#000;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff";b.innerHTML="<p>Đưa mã vạch vào camera</p><button id='x'>Đóng</button>";b.prepend(v);document.body.append(b);x.onclick=()=>{s.getTracks().forEach(t=>t.stop());b.remove()};let t=setInterval(async()=>{let a=await d.detect(v);if(a.length){clearInterval(t);s.getTracks().forEach(t=>t.stop());b.remove();code.value=a[0].rawValue;code.oninput()}},300)}catch(e){alert("Không mở được camera. Hãy cấp quyền Camera.")}}
+summary();
+</script></body></html>
