@@ -1,19 +1,19 @@
-package vn.qlnshsd.app;
+package com.qlnshsd.app;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
+import android.graphics.Bitmap;
+import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
-
-    private static final String APP_URL =
-        "https://script.google.com/macros/s/AKfycbxOveWjcHYT32TUwKOaOg1U4med7YyBhXuY3z64vYUKun5oXwng_6PGmpsdlvMa4wN3/exec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,11 +25,46 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setSupportZoom(true);
+        settings.setBuiltInZoomControls(true);
+        settings.setDisplayZoomControls(false);
 
-        webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebViewClient(new WebViewClient() {
 
-        webView.loadUrl(APP_URL);
+            @Override
+            public boolean shouldOverrideUrlLoading(
+                    WebView view, WebResourceRequest request) {
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(
+                    WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onReceivedError(
+                    WebView view,
+                    WebResourceRequest request,
+                    WebResourceError error) {
+
+                super.onReceivedError(view, request, error);
+
+                if (request.isForMainFrame()) {
+                    Toast.makeText(
+                        MainActivity.this,
+                        "Không tải được trang web. Vui lòng kiểm tra kết nối Internet.",
+                        Toast.LENGTH_LONG
+                    ).show();
+                }
+            }
+        });
+
+        webView.loadUrl(
+            "https://script.google.com/macros/s/AKfycbxOveWjcHYT32TUwKOaOg1U4med7YyBhXuY3z64vYUKun5oXwng_6PGmpsdlvMa4wN3/exec"
+        );
     }
 
     @Override
@@ -39,5 +74,13 @@ public class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (webView != null) {
+            webView.destroy();
+        }
+        super.onDestroy();
     }
 }
