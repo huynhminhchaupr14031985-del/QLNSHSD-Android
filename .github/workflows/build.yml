@@ -108,14 +108,14 @@ jobs:
           }
           EOF
 
-          # Khởi tạo Gradle Wrapper
-          gradle wrapper --gradle-version 8.0 --project-dir android
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.0'
 
       - name: Build APK with Gradle
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        working-directory: ./android
+        run: gradle assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
