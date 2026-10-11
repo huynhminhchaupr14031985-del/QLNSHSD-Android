@@ -1,102 +1,37 @@
 name: Build Android APK
 
 on:
-  push:
-    branches: [ "main", "master" ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.0'
-          cache: true
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Webview App to APK
-        run: |
-          # Tạo dự án Flutter mới tinh gọn
-          flutter create --template=app --org com.qlnshsd qlnshsd_app
-          cd qlnshsd_app
+      - name: Build APK
+        run: gradle assembleDebug
 
-          # Đưa file Index.html của bạn vào thư mục assets của Flutter
-          mkdir -p assets
-          if [ -f ../Index.html ]; then
-            cp ../Index.html assets/index.html
-          else
-            echo "<h1>QLNSHSD App</h1>" > assets/index.html
-          fi
-
-          # Cấu hình để Flutter load file HTML cục bộ qua WebView
-          cat << 'EOF' > pubspec.yaml
-          name: qlnshsd_app
-          description: QLNSHSD Mobile App
-          publish_to: 'none'
-          version: 1.0.0+1
-          environment:
-            sdk: '>=3.0.0 <4.0.0'
-          dependencies:
-            flutter:
-              sdk: flutter
-            webview_flutter: ^4.4.2
-          flutter:
-            uses-material-design: true
-            assets:
-              - assets/index.html
-          EOF
-
-          # Tạo mã nguồn MainActivity/WebView chuẩn của Flutter
-          cat << 'EOF' > lib/main.dart
-          import 'package:flutter/material.dart';
-          import 'package:webview_flutter/webview_flutter.dart';
-
-          void main() => runApp(const MaterialApp(home: WebViewApp(), debugShowCheckedModeBanner: false));
-
-          class WebViewApp extends StatefulWidget {
-            const WebViewApp({super.key});
-            @override
-            State<WebViewApp> createState() => _WebViewAppState();
-          }
-
-          class _WebViewAppState extends State<WebViewApp> {
-            late final WebViewController controller;
-
-            @override
-            void initState() {
-              super.initState();
-              controller = WebViewController()
-                ..setJavaScriptMode(JavaScriptMode.unlimited)
-                ..loadFlutterAsset('assets/index.html');
-            }
-
-            @override
-            Widget build(BuildContext context) {
-              return Scaffold(
-                body: SafeArea(child: WebViewWidget(controller: controller)),
-              );
-            }
-          }
-          EOF
-
-          # Tải thư viện và tiến hành build ra file APK Debug
-          flutter pub get
-          flutter build apk --debug
-
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: QLNSHSD-App-Debug
-          path: qlnshsd_app/build/app/outputs/flutter-apk/app-debug.apk
-          
+          name: QL-NSX-HSD-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
