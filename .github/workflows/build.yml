@@ -126,7 +126,8 @@ jobs:
                   webView.setWebViewClient(new WebViewClient());
 
                   webView.loadUrl(
-                      "THAY_BANG_URL_WEB_APP_CUA_BAN"
+                      "https://script.google.com/macros/s/AKfycbxd6iEfT-PZIfjZoU1tUp-auIOl1YX3fwfCcn1gFhpqonRs1Cg4VQ_G27mzWsTAMeVN/exec"
+
                   );
               }
           }
