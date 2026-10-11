@@ -19,75 +19,84 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Generate and Build App
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          cache: true
+
+      - name: Build Webview App to APK
         run: |
-          mkdir -p android/app/src/main/assets
-          mkdir -p android/app/src/main/java/com/qlnshsd/app
+          # Tạo dự án Flutter mới tinh gọn
+          flutter create --template=app --org com.qlnshsd qlnshsd_app
+          cd qlnshsd_app
 
-          # Copy file Index.html vào thư mục assets
-          cp Index.html android/app/src/main/assets/index.html 2>/dev/null || echo "<h1>QLNSHSD App</h1>" > android/app/src/main/assets/index.html
+          # Đưa file Index.html của bạn vào thư mục assets của Flutter
+          mkdir -p assets
+          if [ -f ../Index.html ]; then
+            cp ../Index.html assets/index.html
+          else
+            echo "<h1>QLNSHSD App</h1>" > assets/index.html
+          fi
 
-          # Tạo cấu hình build.gradle gốc
-          echo "allprojects { repositories { google(); mavenCentral() } }" > android/build.gradle
+          # Cấu hình để Flutter load file HTML cục bộ qua WebView
+          cat << 'EOF' > pubspec.yaml
+          name: qlnshsd_app
+          description: QLNSHSD Mobile App
+          publish_to: 'none'
+          version: 1.0.0+1
+          environment:
+            sdk: '>=3.0.0 <4.0.0'
+          dependencies:
+            flutter:
+              sdk: flutter
+            webview_flutter: ^4.4.2
+          flutter:
+            uses-material-design: true
+            assets:
+              - assets/index.html
+          EOF
 
-          # Tạo file app/build.gradle
-          cat << 'EOF' > android/app/build.gradle
-          plugins { id 'com.android.application' }
-          android {
-              namespace 'com.qlnshsd.app'
-              compileSdk 33
-              defaultConfig {
-                  applicationId "com.qlnshsd.app"
-                  minSdk 21
-                  targetSdk 33
-              }
+          # Tạo mã nguồn MainActivity/WebView chuẩn của Flutter
+          cat << 'EOF' > lib/main.dart
+          import 'package:flutter/material.dart';
+          import 'package:webview_flutter/webview_flutter.dart';
+
+          void main() => runApp(const MaterialApp(home: WebViewApp(), debugShowCheckedModeBanner: false));
+
+          class WebViewApp extends StatefulWidget {
+            const WebViewApp({super.key});
+            @override
+            State<WebViewApp> createState() => _WebViewAppState();
+          }
+
+          class _WebViewAppState extends State<WebViewApp> {
+            late final WebViewController controller;
+
+            @override
+            void initState() {
+              super.initState();
+              controller = WebViewController()
+                ..setJavaScriptMode(JavaScriptMode.unlimited)
+                ..loadFlutterAsset('assets/index.html');
+            }
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                body: SafeArea(child: WebViewWidget(controller: controller)),
+              );
+            }
           }
           EOF
 
-          # Tạo AndroidManifest.xml
-          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <uses-permission android:name="android.permission.CAMERA" />
-              <application android:label="QLNSHSD" android:usesCleartextTraffic="true">
-                  <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-          # Tạo file MainActivity.java
-          cat << 'EOF' > android/app/src/main/java/com/qlnshsd/app/MainActivity.java
-          package com.qlnshsd.app;
-          import android.os.Bundle;
-          import android.webkit.WebView;
-          import androidx.appcompat.app.AppCompatActivity;
-          public class MainActivity extends AppCompatActivity {
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  WebView w = new WebView(this);
-                  setContentView(w);
-                  w.getSettings().setJavaScriptEnabled(true);
-                  w.loadUrl("file:///android_asset/index.html");
-              }
-          }
-          EOF
-
-          # Tiến hành build trực tiếp bằng công cụ dòng lệnh
-          cd android
-          sdkmanager --install "platforms;android-33" || true
-          gradle wrapper --gradle-version 8.0
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          # Tải thư viện và tiến hành build ra file APK Debug
+          flutter pub get
+          flutter build apk --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: QL-NSX-HSD-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: QLNSHSD-App-Debug
+          path: qlnshsd_app/build/app/outputs/flutter-apk/app-debug.apk
           
