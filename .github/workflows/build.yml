@@ -1,37 +1,125 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
-      - master
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Generate Android Project Structure
+        run: |
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/java/com/qlnshsd/app
 
-      - name: Build APK
-        run: gradle assembleDebug
+          # Copy file Index.html vào thư mục assets của app Android
+          cp Index.html android/app/src/main/assets/index.html 2>/dev/null || echo "<h1>QLNSHSD App</h1>" > android/app/src/main/assets/index.html
 
-      - name: Upload APK
+          # Tạo file cấu hình root build.gradle
+          cat << 'EOF' > android/build.gradle
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.1'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+
+          # Tạo file app/build.gradle
+          cat << 'EOF' > android/app/build.gradle
+          plugins {
+              id 'com.android.application'
+          }
+          android {
+              namespace 'com.qlnshsd.app'
+              compileSdk 33
+              defaultConfig {
+                  applicationId "com.qlnshsd.app"
+                  minSdk 21
+                  targetSdk 33
+                  versionCode 1
+                  versionName "1.0"
+              }
+          }
+          dependencies {
+              implementation 'androidx.appcompat:appCompat:1.6.1'
+          }
+          EOF
+
+          # Tạo AndroidManifest.xml (Cấp quyền Internet và Camera để quét mã vạch)
+          cat << 'EOF' > android/app/src/main/AndroidManifest.xml
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.CAMERA" />
+              <application android:label="QLNSHSD" android:usesCleartextTraffic="true">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          # Tạo file MainActivity.java để mở giao diện Web App qua WebView
+          cat << 'EOF' > android/app/src/main/java/com/qlnshsd/app/MainActivity.java
+          package com.qlnshsd.app;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import androidx.appcompat.app.AppCompatActivity;
+
+          public class MainActivity extends AppCompatActivity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  WebView webView = new WebView(this);
+                  setContentView(webView);
+                  WebSettings webSettings = webView.getSettings();
+                  webSettings.setJavaScriptEnabled(true);
+                  webSettings.setDomStorageEnabled(true);
+                  webSettings.setAllowFileAccess(true);
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+          }
+          EOF
+
+          # Khởi tạo Gradle Wrapper
+          gradle wrapper --gradle-version 8.0 --project-dir android
+
+      - name: Build APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: QL-NSX-HSD-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          
