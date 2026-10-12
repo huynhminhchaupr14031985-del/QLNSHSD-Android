@@ -1,18 +1,23 @@
-package com.qlnshsd.app;
+package vn.qlnshsd.app;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceError;
-import android.graphics.Bitmap;
-import android.widget.Toast;
+import android.webkit.JsResult;
+import android.webkit.JsPromptResult;
+import android.webkit.ConsoleMessage;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
+
+    private static final String APP_URL =
+        "https://script.google.com/macros/s/AKfycbxOveWjcHYT32TUwKOaOg1U4med7YyBhXuY3z64vYUKun5oXwng_6PGmpsdlvMa4wN3/exec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,41 +29,75 @@ public class MainActivity extends Activity {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setSupportZoom(true);
-        settings.setBuiltInZoomControls(true);
-        settings.setDisplayZoomControls(false);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setSupportMultipleWindows(false);
 
-        webView.setWebViewClient(new WebViewClient() {
+        webView.setWebViewClient(new WebViewClient());
+
+        webView.setWebChromeClient(new WebChromeClient() {
 
             @Override
-            public boolean shouldOverrideUrlLoading(
+            public boolean onJsAlert(
                     WebView view,
-                    WebResourceRequest request) {
-                return false;
+                    String url,
+                    String message,
+                    JsResult result) {
+
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Thông báo")
+                    .setMessage(message)
+                    .setPositiveButton("OK",
+                        (dialog, which) -> result.confirm())
+                    .setOnCancelListener(dialog -> result.cancel())
+                    .show();
+
+                return true;
             }
 
             @Override
-            public void onReceivedError(
+            public boolean onJsConfirm(
                     WebView view,
-                    WebResourceRequest request,
-                    WebResourceError error) {
+                    String url,
+                    String message,
+                    JsResult result) {
 
-                super.onReceivedError(view, request, error);
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Xác nhận")
+                    .setMessage(message)
+                    .setPositiveButton("Đồng ý",
+                        (dialog, which) -> result.confirm())
+                    .setNegativeButton("Hủy",
+                        (dialog, which) -> result.cancel())
+                    .setOnCancelListener(dialog -> result.cancel())
+                    .show();
 
-                if (request.isForMainFrame()) {
-                    Toast.makeText(
-                        MainActivity.this,
-                        "Không tải được trang. Hãy kiểm tra Internet và quyền truy cập.",
-                        Toast.LENGTH_LONG
-                    ).show();
-                }
+                return true;
+            }
+
+            @Override
+            public boolean onJsPrompt(
+                    WebView view,
+                    String url,
+                    String message,
+                    String defaultValue,
+                    JsPromptResult result) {
+
+                result.confirm(defaultValue);
+                return true;
+            }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage message) {
+                android.util.Log.d(
+                    "QLNSHSD",
+                    message.message() + " -- Dòng "
+                    + message.lineNumber()
+                );
+                return true;
             }
         });
 
-        webView.loadUrl(
-            "https://script.google.com/macros/s/AKfycbxd6iEfT-PZIfjZoU1tUp-auIOl1YX3fwfCcn1gFhpqonRs1Cg4VQ_G27mzWsTAMeVN/exec"
-        );
+        webView.loadUrl(APP_URL);
     }
 
     @Override
@@ -68,13 +107,5 @@ public class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (webView != null) {
-            webView.destroy();
-        }
-        super.onDestroy();
     }
 }
