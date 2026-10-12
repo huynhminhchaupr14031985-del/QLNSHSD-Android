@@ -1453,67 +1453,100 @@ function card(x){
    XÓA SỐ LÔ
 ========================= */
 
-function deleteLot(id){
+function deleteLot(id) {
+  id = String(id || "").trim();
 
-  if(!id){
-
-    message(
-      "Không xác định được số lô.",
-      "error"
-    );
-
+  if (!id) {
+    message("Không xác định được số lô.", "error");
     return;
   }
 
+  // Hiển thị xác nhận ngay trên giao diện,
+  // không dùng hộp thoại confirm() của Android WebView.
+  const overlay = document.createElement("div");
 
-  const ok =
-    confirm(
-      "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
-      "Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách."
-    );
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:99999;
+    background:rgba(0,0,0,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  `;
 
+  overlay.innerHTML = `
+    <div style="
+      background:#fff;
+      width:100%;
+      max-width:360px;
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 4px 20px rgba(0,0,0,.25);
+    ">
+      <h3 style="margin-top:0;color:#b3261e">
+        Xác nhận xóa
+      </h3>
 
-  if(!ok){
-    return;
-  }
+      <p>Bạn có chắc chắn muốn xóa số lô này không?</p>
 
+      <p style="font-size:13px;color:#666">
+        Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách.
+      </p>
 
-  google.script.run
+      <div style="
+        display:flex;
+        gap:10px;
+        justify-content:flex-end;
+        margin-top:20px;
+      ">
+        <button id="cancelDelete"
+          class="btn btn-gray">
+          Hủy
+        </button>
 
-    .withSuccessHandler(
-      function(res){
+        <button id="confirmDelete"
+          class="btn btn-red">
+          Đồng ý xóa
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector("#cancelDelete").onclick = function() {
+    overlay.remove();
+  };
+
+  overlay.querySelector("#confirmDelete").onclick = function() {
+    const btn = overlay.querySelector("#confirmDelete");
+    btn.disabled = true;
+    btn.textContent = "Đang xóa...";
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        overlay.remove();
 
         message(
-          "🗑️ " +
-          (
-            res.message ||
-            "Đã xóa số lô."
-          ),
+          "🗑️ " + ((res && res.message) || "Đã xóa số lô."),
           "success"
         );
 
-
         loadLots();
-
-      }
-    )
-
-    .withFailureHandler(
-      function(err){
+      })
+      .withFailureHandler(function(err) {
+        overlay.remove();
 
         message(
           "❌ Không xóa được: " +
-          (
-            err.message ||
-            err
-          ),
+          ((err && err.message) || err),
           "error"
         );
-
-      }
-    )
-
-    .deleteLot(id);
+      })
+      .deleteLot(id);
+  };
 }
 
 
