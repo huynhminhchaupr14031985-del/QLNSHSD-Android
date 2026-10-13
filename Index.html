@@ -1454,99 +1454,49 @@ function card(x){
 ========================= */
 
 function deleteLot(id) {
-  id = String(id || "").trim();
+  id = String(id == null ? "" : id).trim();
 
   if (!id) {
-    message("Không xác định được số lô.", "error");
-    return;
+    throw new Error("Không xác định được số lô cần xóa.");
   }
 
-  // Hiển thị xác nhận ngay trên giao diện,
-  // không dùng hộp thoại confirm() của Android WebView.
-  const overlay = document.createElement("div");
+  const sh = getSS_().getSheetByName(CFG.HSD_SHEET);
 
-  overlay.style.cssText = `
-    position:fixed;
-    inset:0;
-    z-index:99999;
-    background:rgba(0,0,0,.55);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-  `;
+  if (!sh) {
+    throw new Error("Không tìm thấy sheet QL_HSD.");
+  }
 
-  overlay.innerHTML = `
-    <div style="
-      background:#fff;
-      width:100%;
-      max-width:360px;
-      border-radius:12px;
-      padding:20px;
-      box-shadow:0 4px 20px rgba(0,0,0,.25);
-    ">
-      <h3 style="margin-top:0;color:#b3261e">
-        Xác nhận xóa
-      </h3>
+  const lastRow = sh.getLastRow();
 
-      <p>Bạn có chắc chắn muốn xóa số lô này không?</p>
+  if (lastRow < 2) {
+    throw new Error("Danh sách số lô đang trống.");
+  }
 
-      <p style="font-size:13px;color:#666">
-        Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách.
-      </p>
+  // Đọc ID ở cột A, từ dòng 2 trở xuống.
+  const ids = sh.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+  const targetId = id.trim();
 
-      <div style="
-        display:flex;
-        gap:10px;
-        justify-content:flex-end;
-        margin-top:20px;
-      ">
-        <button id="cancelDelete"
-          class="btn btn-gray">
-          Hủy
-        </button>
+  for (let i = 0; i < ids.length; i++) {
+    const sheetId = String(ids[i][0]).trim();
 
-        <button id="confirmDelete"
-          class="btn btn-red">
-          Đồng ý xóa
-        </button>
-      </div>
-    </div>
-  `;
+    if (sheetId === targetId) {
+      const rowToDelete = i + 2;
 
-  document.body.appendChild(overlay);
+      sh.deleteRow(rowToDelete);
+      SpreadsheetApp.flush();
 
-  overlay.querySelector("#cancelDelete").onclick = function() {
-    overlay.remove();
-  };
+      return {
+        success: true,
+        message: "Đã xóa số lô thành công."
+      };
+    }
+  }
 
-  overlay.querySelector("#confirmDelete").onclick = function() {
-    const btn = overlay.querySelector("#confirmDelete");
-    btn.disabled = true;
-    btn.textContent = "Đang xóa...";
-
-    google.script.run
-      .withSuccessHandler(function(res) {
-        overlay.remove();
-
-        message(
-          "🗑️ " + ((res && res.message) || "Đã xóa số lô."),
-          "success"
-        );
-
-        loadLots();
-      })
-      .withFailureHandler(function(err) {
-        overlay.remove();
-
-        message(
-          "❌ Không xóa được: " +
-          ((err && err.message) || err),
-          "error"
-        );
-      })
-      .deleteLot(id);
-  };
+  throw new Error(
+    "Không tìm thấy ID '" + targetId +
+    "' ở cột A của sheet " + CFG.HSD_SHEET +
+    ". Vui lòng kiểm tra cột ID và dữ liệu nút Xóa."
+  );
 }
 
 
