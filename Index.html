@@ -1429,23 +1429,18 @@ function card(x){
 
       <!-- NÚT XÓA -->
 
-      <div class="delete-row">
+<div class="delete-row">
 
-        <button
-        type="button"
-          class="btn btn-red"
-          onclick='deleteLot(
-            ${JSON.stringify(String(x.id))}
-          )'
-        >
-          🗑️ Xóa số lô
-        </button>
+  <button
+    type="button"
+    class="btn btn-red"
+    onclick="deleteLotFromCard(this)"
+    data-lot-id="${esc(String(x.id ?? ''))}"
+  >
+    🗑️ Xóa số lô
+  </button>
 
-      </div>
-
-
-    </div>
-
+</div>
   `;
 }
 
