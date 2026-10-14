@@ -1469,7 +1469,25 @@ function deleteLotFromCard(button) {
    XÓA SỐ LÔ
 ========================= */
 
-function deleteLot(id) {
+function testDeleteButton(button) {
+  try {
+    const id = button.getAttribute("data-lot-id");
+
+    alert("Đã nhấn nút Xóa.\nID số lô: " + id);
+
+    if (!id) {
+      alert("Lỗi: Không lấy được ID số lô.");
+      return;
+    }
+
+    deleteLot(id);
+
+  } catch (err) {
+    alert("Lỗi JavaScript: " + err.message);
+  }
+}
+  
+  function deleteLot(id) {
   id = String(id == null ? "" : id).trim();
 
   if (!id) {
