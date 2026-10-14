@@ -10,8 +10,8 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/ic_launcher.png.jpg"/// noi chua file hinh
-        android:roundIcon="@drawable/ic_launcher.png.jpg"
+        android:icon="@drawable/ic_launcher.png"/// noi chua file hinh
+        android:roundIcon="@drawable/ic_launcher.png"
         android:label="QL NSX-HSD"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
