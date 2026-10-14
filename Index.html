@@ -1277,7 +1277,27 @@ function renderList(list){
    CARD SỐ LÔ
 ================================ */
 
-function card(x){
+function deleteLotFromCard(button) {
+  try {
+    const id = button.getAttribute("data-lot-id");
+
+    if (!id) {
+      message("Không xác định được số lô cần xóa.", "error");
+      return;
+    }
+
+    deleteLot(id);
+
+  } catch (err) {
+    message(
+      "Lỗi khi mở chức năng xóa: " + err.message,
+      "error"
+    );
+  }
+}
+  
+  
+  function card(x){
 
   let used =
     Number(x.used);
