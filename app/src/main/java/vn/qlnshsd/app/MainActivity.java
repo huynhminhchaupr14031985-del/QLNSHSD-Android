@@ -86,16 +86,28 @@ public class MainActivity extends Activity {
                 return true;
             }
 
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage message) {
-                android.util.Log.d(
-                    "QLNSHSD",
-                    message.message() + " -- Dòng "
-                    + message.lineNumber()
-                );
-                return true;
-            }
-        });
+@Override
+public boolean onConsoleMessage(ConsoleMessage message) {
+    String log = message.message()
+        + " -- Dòng " + message.lineNumber()
+        + " -- URL: " + message.sourceId();
+
+    android.util.Log.d("QLNSHSD", log);
+
+    if (message.messageLevel() == ConsoleMessage.MessageLevel.ERROR) {
+        runOnUiThread(() ->
+            new AlertDialog.Builder(MainActivity.this)
+                .setTitle("Lỗi JavaScript")
+                .setMessage(log)
+                .setPositiveButton("Đóng", null)
+                .show()
+        );
+    }
+
+    return true;
+}
+
+ });
 
         webView.loadUrl(APP_URL);
     }
