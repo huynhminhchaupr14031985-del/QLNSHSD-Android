@@ -15,8 +15,8 @@
     <application
         android:allowBackup="false"
         android:label="QL NSX-HSD"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@mipmap-hdpi/ic_launcher"
+        android:roundIcon="@mipmap-hdpi/ic_launcher_round"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
