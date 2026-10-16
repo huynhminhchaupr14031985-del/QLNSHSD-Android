@@ -28,7 +28,9 @@ jobs:
 
       - name: Create Android Project
         run: |
-          mkdir -p android/app/src/main/java/com/qlnshsd/app
+          mkdir -p android/app/src/main/java/vn/qlnshsd/app
+          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
 
           cat > android/settings.gradle <<'EOF'
           pluginManagement {
@@ -37,7 +39,7 @@ jobs:
                   mavenCentral()
                   gradlePluginPortal()
               }
-          } 
+          }
 
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
@@ -63,15 +65,15 @@ jobs:
           }
 
           android {
-              namespace 'com.qlnshsd.app'
+              namespace 'vn.qlnshsd.app'
               compileSdk 34
 
               defaultConfig {
-                  applicationId 'com.qlnshsd.app'
-                  minSdk 21
+                  applicationId 'vn.qlnshsd.app'
+                  minSdk 23
                   targetSdk 28
-                  versionCode 1
-                  versionName '1.0'
+                  versionCode 2
+                  versionName '1.1'
               }
 
               compileOptions {
@@ -81,12 +83,97 @@ jobs:
           }
           EOF
 
+          cat > android/app/src/main/res/drawable/ic_launcher_box.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+
+              <path
+                  android:fillColor="#176B43"
+                  android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
+
+              <path
+                  android:fillColor="#DDA568"
+                  android:pathData="M18,35 L54,17 L91,35 L54,55 Z" />
+
+              <path
+                  android:fillColor="#C78A4B"
+                  android:pathData="M18,35 L54,55 L54,88 L18,68 Z" />
+
+              <path
+                  android:fillColor="#A96C39"
+                  android:pathData="M54,55 L91,35 L91,68 L54,88 Z" />
+
+              <path
+                  android:fillColor="#F4D4A0"
+                  android:pathData="M39,25 L48,21 L80,38 L71,43 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M8,29 L32,29 L32,48 L8,48 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M75,59 L100,59 L100,79 L75,79 Z" />
+
+              <path
+                  android:fillColor="#176B43"
+                  android:pathData="M12,33 L28,33 L28,44 L12,44 Z" />
+
+              <path
+                  android:fillColor="#176B43"
+                  android:pathData="M79,63 L96,63 L96,75 L79,75 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M13,25 L17,25 L17,31 L13,31 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M24,25 L28,25 L28,31 L24,31 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M80,55 L84,55 L84,61 L80,61 Z" />
+
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M91,55 L95,55 L95,61 L91,61 Z" />
+
+          </vector>
+          EOF
+
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/launcher_background" />
+              <foreground android:drawable="@drawable/ic_launcher_box" />
+          </adaptive-icon>
+          EOF
+
+          mkdir -p android/app/src/main/res/values
+
+          cat > android/app/src/main/res/values/colors.xml <<'EOF'
+          <resources>
+              <color name="launcher_background">#176B43</color>
+          </resources>
+          EOF
+
           cat > android/app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.CAMERA" />
+
+              <uses-feature
+                  android:name="android.hardware.camera"
+                  android:required="false" />
 
               <application
-                  android:label="QLNSHSD"
+                  android:allowBackup="false"
+                  android:label="QL NSX-HSD"
+                  android:icon="@drawable/ic_launcher_box"
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
@@ -104,13 +191,14 @@ jobs:
           </manifest>
           EOF
 
-          cat > android/app/src/main/java/com/qlnshsd/app/MainActivity.java <<'EOF'
-          package com.qlnshsd.app;
+          cat > android/app/src/main/java/vn/qlnshsd/app/MainActivity.java <<'EOF'
+          package vn.qlnshsd.app;
 
           import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import android.webkit.WebSettings;
 
           public class MainActivity extends Activity {
 
@@ -121,13 +209,14 @@ jobs:
                   WebView webView = new WebView(this);
                   setContentView(webView);
 
-                  webView.getSettings().setJavaScriptEnabled(true);
-                  webView.getSettings().setDomStorageEnabled(true);
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+
                   webView.setWebViewClient(new WebViewClient());
 
                   webView.loadUrl(
                       "https://script.google.com/macros/s/AKfycbxd6iEfT-PZIfjZoU1tUp-auIOl1YX3fwfCcn1gFhpqonRs1Cg4VQ_G27mzWsTAMeVN/exec"
-
                   );
               }
           }
