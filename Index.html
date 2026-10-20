@@ -1,644 +1,1706 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="vi">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#18804b">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<meta
+  name="theme-color"
+  content="#18804b"
+>
+
 <title>Quản lý NSX – HSD</title>
 
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f6f5;color:#222}
-.header{background:#18804b;color:#fff;padding:10px 12px}
-.title{font-size:17px;font-weight:bold;margin-bottom:9px}
-.search{width:100%;border:0;border-radius:8px;padding:10px;font-size:15px}
-.container{padding:8px;max-width:720px;margin:auto}
-.tabs{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px}
-.tab{border:0;border-radius:7px;background:#18804b;color:#fff;padding:10px 3px;font-size:12px;font-weight:bold}
-.tab.active{background:#0d6339;outline:2px solid #b8e4ca}
-.card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;box-shadow:0 1px 5px #00000012}
-.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
-.summary-item{padding:5px 2px}
-.summary-number{font-size:19px;font-weight:bold}
-.summary-label{font-size:11px;color:#555;margin-top:3px}
-.form-row{margin-bottom:11px}
-label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px}
-input,textarea,select{width:100%;border:1px solid #ddd;border-radius:7px;padding:10px;font-size:14px;background:#fff;color:#222}
-textarea{min-height:65px;resize:vertical}
-.btn{border:0;border-radius:7px;padding:10px 12px;font-size:13px;font-weight:bold;cursor:pointer}
-.btn:disabled{opacity:.55}
-.btn-green{background:#18804b;color:#fff}
-.btn-red{background:#d93025;color:#fff}
-.btn-gray{background:#eee;color:#222}
-.full{width:100%}
-.product-results{border:1px solid #ddd;border-radius:7px;margin-top:4px;background:white;overflow:hidden}
-.product-result{padding:10px;border-bottom:1px solid #eee;font-size:13px;cursor:pointer}
-.product-result:last-child{border-bottom:0}
-.status{display:inline-block;padding:5px 7px;border-radius:5px;font-size:12px;font-weight:bold;margin-top:6px}
-.status-ok{background:#dff3e7;color:#137333}
-.status-warn{background:#fff1c7;color:#9a6700}
-.status-bad{background:#ffdcd9;color:#b3261e}
-.move{background:#edf5ff;border-left:4px solid #2878d4;padding:8px;border-radius:4px;margin-top:8px;font-size:13px;line-height:1.5}
-.lot{background:#fff;border-radius:9px;padding:12px;margin-bottom:8px;box-shadow:0 1px 5px #00000012;overflow-wrap:anywhere}
-.lot-name{font-size:15px;font-weight:bold;line-height:1.4}
-.lot-info{font-size:13px;line-height:1.7;margin-top:5px}
-.percent{font-size:12px;line-height:1.7;margin-top:7px}
-.delete-row{text-align:right;margin-top:10px}
-.empty{text-align:center;color:#777;padding:20px 5px;font-size:13px}
-.message{display:none;padding:10px;border-radius:7px;margin-bottom:8px;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
-.message.success{display:block;background:#dff3e7;color:#137333}
-.message.error{display:block;background:#ffdcd9;color:#b3261e}
-.hidden{display:none!important}
-.section-title{font-weight:bold;margin-bottom:10px}
-.muted{color:#777;font-size:12px;line-height:1.5}
-@media(max-width:500px){
- .summary-number{font-size:16px}
- .summary-label{font-size:10px}
- .tab{font-size:10px;padding:10px 1px}
- .container{padding:6px}
+
+*{
+  box-sizing:border-box;
 }
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f6f5;
+  color:#222;
+}
+
+.header{
+  background:#18804b;
+  color:#fff;
+  padding:8px 12px 10px;
+}
+
+.title{
+  font-size:15px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.search{
+  width:100%;
+  border:0;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:14px;
+}
+
+.container{
+  padding:8px;
+  max-width:720px;
+  margin:auto;
+}
+
+.tabs{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr 1fr;
+  gap:4px;
+  margin-bottom:8px;
+}
+
+.tab{
+  border:0;
+  border-radius:7px;
+  background:#18804b;
+  color:#fff;
+  padding:8px 4px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.tab.active{
+  background:#0d6339;
+}
+
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:8px;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  text-align:center;
+}
+
+.summary-item{
+  padding:4px 2px;
+}
+
+.summary-number{
+  font-size:17px;
+  font-weight:bold;
+}
+
+.summary-label{
+  font-size:11px;
+}
+
+.form-row{
+  margin-bottom:10px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:bold;
+  margin-bottom:4px;
+}
+
+input,
+textarea,
+select{
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:7px;
+  padding:9px;
+  font-size:14px;
+  background:#fff;
+}
+
+textarea{
+  min-height:65px;
+}
+
+.btn{
+  border:0;
+  border-radius:7px;
+  padding:9px 12px;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.btn-green{
+  background:#18804b;
+  color:white;
+}
+
+.btn-red{
+  background:#d93025;
+  color:white;
+}
+
+.btn-gray{
+  background:#eee;
+}
+
+.full{
+  width:100%;
+}
+
+.product-results{
+  border:1px solid #ddd;
+  border-radius:7px;
+  margin-top:4px;
+  background:white;
+  overflow:hidden;
+}
+
+.product-result{
+  padding:9px;
+  border-bottom:1px solid #eee;
+  font-size:13px;
+}
+
+.product-result:last-child{
+  border-bottom:0;
+}
+
+.status{
+  display:inline-block;
+  padding:4px 7px;
+  border-radius:5px;
+  font-size:12px;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.status-ok{
+  background:#dff3e7;
+  color:#137333;
+}
+
+.status-warn{
+  background:#fff1c7;
+  color:#9a6700;
+}
+
+.status-bad{
+  background:#ffdcd9;
+  color:#b3261e;
+}
+
+.move{
+  background:#edf5ff;
+  border-left:4px solid #2878d4;
+  padding:7px;
+  border-radius:4px;
+  margin-top:7px;
+  font-size:13px;
+}
+
+.lot{
+  background:#fff;
+  border-radius:9px;
+  padding:11px;
+  margin-bottom:8px;
+  box-shadow:0 1px 5px rgba(0,0,0,.08);
+}
+
+.lot-name{
+  font-size:14px;
+  font-weight:bold;
+}
+
+.lot-info{
+  font-size:13px;
+  line-height:1.55;
+  margin-top:3px;
+}
+
+.percent{
+  font-size:12px;
+  margin-top:6px;
+}
+
+.delete-row{
+  text-align:right;
+  margin-top:8px;
+}
+
+.empty{
+  text-align:center;
+  color:#777;
+  padding:18px 5px;
+  font-size:13px;
+}
+
+.message{
+  display:none;
+  padding:9px;
+  border-radius:7px;
+  margin-bottom:8px;
+  font-size:13px;
+}
+
+.success{
+  display:block;
+  background:#dff3e7;
+  color:#137333;
+}
+
+.error{
+  display:block;
+  background:#ffdcd9;
+  color:#b3261e;
+}
+
+.hidden{
+  display:none;
+}
+
+@media(max-width:500px){
+
+  .summary-number{
+    font-size:16px;
+  }
+
+  .summary-label{
+    font-size:10px;
+  }
+
+  .tab{
+    font-size:11px;
+    padding:8px 2px;
+  }
+
+}
+
 </style>
+
 </head>
 
+
 <body>
+
+
 <div class="header">
-  <div class="title">📦 Quản lý NSX – HSD</div>
-  <input class="search" id="globalSearchInput"
-         placeholder="🔎 Tìm mã hoặc tên hàng"
-         oninput="filterGlobalSearch()">
-</div>
 
-<div class="container">
-  <div id="message" class="message"></div>
-
-  <div class="tabs">
-    <button class="tab active" id="tabHome" onclick="showPage('home')">🏠 Tổng quan</button>
-    <button class="tab" id="tabAdd" onclick="showPage('add')">➕ Nhập HSD</button>
-    <button class="tab" id="tabList" onclick="showPage('list')">📋 Danh sách</button>
-    <button class="tab" id="tabMove" onclick="showPage('move')">⚠️ Lùi hàng</button>
+  <div class="title">
+    📦 Quản lý NSX – HSD
   </div>
 
-  <!-- TỔNG QUAN -->
-  <section id="homePage">
-    <div class="card">
-      <div class="summary">
-        <div class="summary-item">
-          <div class="summary-number" id="total">0</div>
-          <div class="summary-label">Tổng lô</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-number" id="ok">0</div>
-          <div class="summary-label">Chưa lùi</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-number" id="moveCount">0</div>
-          <div class="summary-label">Cần lùi</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-number" id="today">0</div>
-          <div class="summary-label">Lùi hôm nay</div>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:12px">
-        <b id="expired">0</b>
-        <div class="summary-label">Đã hết hạn</div>
-      </div>
-    </div>
+  <input
+    class="search"
+    id="globalSearch"
+    placeholder="Tìm mã hoặc tên hàng"
+    oninput="globalSearch()"
+  >
 
-    <div class="card">
-      <b>🔎 Tra cứu sản phẩm</b>
-      <p class="muted">Nhập mã hoặc tên hàng ở ô tìm kiếm phía trên. Chọn một số lô để xem thông tin.</p>
-    </div>
-    <div id="homeLots"></div>
-  </section>
-
-  <!-- NHẬP HSD -->
-  <section id="addPage" class="hidden">
-    <div class="card">
-      <div class="section-title">➕ Nhập thông tin số lô</div>
-
-      <div class="form-row">
-        <label for="productSearch">Tìm sản phẩm</label>
-        <input id="productSearch" placeholder="Nhập mã hoặc tên hàng..."
-               autocomplete="off" oninput="searchProduct()">
-        <div id="productResults" class="product-results hidden"></div>
-      </div>
-
-      <div class="form-row">
-        <label for="code">Mã sản phẩm</label>
-        <div style="display:flex;gap:7px;align-items:center">
-          <input id="code" placeholder="Mã sản phẩm" style="flex:1;min-width:0">
-          <button type="button" class="btn btn-green"
-                  onclick="startNativeScanner()" style="white-space:nowrap">📷 Quét</button>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <label for="name">Tên sản phẩm</label>
-        <input id="name" readonly placeholder="Tên sẽ tự điền khi chọn sản phẩm">
-      </div>
-
-      <div class="form-row">
-        <label for="nsx">Ngày sản xuất</label>
-        <input type="date" id="nsx">
-      </div>
-
-      <div class="form-row">
-        <label for="hsd">Hạn sử dụng</label>
-        <input type="date" id="hsd">
-      </div>
-
-      <div class="form-row">
-        <label for="entry">Ngày nhập</label>
-        <input type="date" id="entry">
-      </div>
-
-      <div class="form-row">
-        <label for="qty">Số lượng</label>
-        <input type="number" id="qty" value="1" min="0">
-      </div>
-
-      <div class="form-row">
-        <label for="loc">Vị trí</label>
-        <input id="loc" placeholder="Kho / kệ / vị trí">
-      </div>
-
-      <div class="form-row">
-        <label for="note">Ghi chú</label>
-        <textarea id="note" placeholder="Nhập ghi chú nếu có"></textarea>
-      </div>
-
-      <button type="button" class="btn btn-green full" id="saveButton" onclick="saveLot()">💾 LƯU SỐ LÔ</button>
-    </div>
-  </section>
-
-  <!-- DANH SÁCH -->
-  <section id="listPage" class="hidden">
-    <div class="card">
-      <label for="filter">Lọc trạng thái</label>
-      <div style="display:flex;gap:6px">
-        <select id="filter" onchange="renderAllLists()" style="flex:1;min-width:0">
-          <option value="all">Tất cả</option>
-          <option value="Chưa đến hạn lùi hàng">Chưa đến hạn lùi hàng</option>
-          <option value="Đã đến hạn lùi hàng">Đã đến hạn lùi hàng</option>
-          <option value="Đến hạn lùi hàng hôm nay">Đến hạn lùi hàng hôm nay</option>
-          <option value="Hết hạn hôm nay">Hết hạn hôm nay</option>
-          <option value="Đã hết hạn">Đã hết hạn</option>
-        </select>
-        <button type="button" class="btn btn-gray" onclick="loadLots()">🔄 Tải lại</button>
-      </div>
-    </div>
-    <div id="list"></div>
-  </section>
-
-  <!-- LÙI HÀNG -->
-  <section id="movePage" class="hidden">
-    <div id="moveLots"></div>
-  </section>
 </div>
 
+
+<div class="container">
+
+
+<div id="message"></div>
+
+
+<!-- =====================
+     TAB
+===================== -->
+
+<div class="tabs">
+
+  <button
+    class="tab active"
+    id="tabHome"
+    onclick="showPage('home')"
+  >
+    🏠 Tổng quan
+  </button>
+
+  <button
+    class="tab"
+    id="tabAdd"
+    onclick="showPage('add')"
+  >
+    ➕ Nhập HSD
+  </button>
+
+  <button
+    class="tab"
+    id="tabList"
+    onclick="showPage('list')"
+  >
+    📋 Danh sách
+  </button>
+
+  <button
+    class="tab"
+    id="tabMove"
+    onclick="showPage('move')"
+  >
+    ⚠️ Lùi hàng
+  </button>
+
+</div>
+
+
+<!-- =====================
+     TỔNG QUAN
+===================== -->
+
+<div id="homePage">
+
+
+<div class="card">
+
+  <div class="summary">
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="total"
+      >0</div>
+
+      <div class="summary-label">
+        Tổng lô
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="ok"
+      >0</div>
+
+      <div class="summary-label">
+        Chưa lùi
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="moveCount"
+      >0</div>
+
+      <div class="summary-label">
+        Cần lùi
+      </div>
+    </div>
+
+
+    <div class="summary-item">
+      <div
+        class="summary-number"
+        id="today"
+      >0</div>
+
+      <div class="summary-label">
+        Hôm nay
+      </div>
+    </div>
+
+
+  </div>
+
+
+  <div
+    style="
+      text-align:center;
+      margin-top:8px;
+    "
+  >
+
+    <b id="expired">
+      0
+    </b>
+
+    <div class="summary-label">
+      Hết hạn
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="card">
+
+  <b>
+    Tra cứu sản phẩm
+  </b>
+
+  <p
+    style="
+      color:#777;
+      font-size:12px;
+      margin-bottom:0;
+    "
+  >
+    Nhập mã hoặc tên hàng ở ô tìm kiếm phía trên.
+  </p>
+
+</div>
+
+
+<div
+  id="homeLots"
+></div>
+
+
+</div>
+
+
+<!-- =====================
+     NHẬP HSD
+===================== -->
+
+<div
+  id="addPage"
+  class="hidden"
+>
+
+
+<div class="card">
+
+  <b>➕ Nhập thông tin số lô</b>
+
+
+  <div class="form-row">
+
+    <label>
+      Tìm sản phẩm
+    </label>
+
+    <input
+      id="productSearch"
+      placeholder="Nhập mã hoặc tên hàng..."
+      oninput="searchProduct()"
+    >
+
+    <div
+      id="productResults"
+      class="product-results hidden"
+    ></div>
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Mã sản phẩm
+    </label>
+
+    <input
+      id="code"
+      placeholder="Chọn, quét hoặc nhập mã sản phẩm"
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Tên sản phẩm
+    </label>
+
+    <input
+      id="name"
+      placeholder="Nhập tên sản phẩm nếu chưa có trong danh mục"
+      autocomplete="off"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ngày sản xuất
+    </label>
+
+    <input
+      type="date"
+      id="nsx"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Hạn sử dụng
+    </label>
+
+    <input
+      type="date"
+      id="hsd"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ngày nhập
+    </label>
+
+    <input
+      type="date"
+      id="entry"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Số lượng
+    </label>
+
+    <input
+      type="number"
+      id="qty"
+      value="1"
+      min="0"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Vị trí
+    </label>
+
+    <input
+      id="loc"
+      placeholder="Kho / kệ / vị trí"
+    >
+
+  </div>
+
+
+  <div class="form-row">
+
+    <label>
+      Ghi chú
+    </label>
+
+    <textarea
+      id="note"
+    ></textarea>
+
+  </div>
+
+
+  <button
+    class="btn btn-green full"
+    onclick="saveLot()"
+  >
+    💾 LƯU SỐ LÔ
+  </button>
+
+
+</div>
+
+
+</div>
+
+
+<!-- =====================
+     DANH SÁCH
+===================== -->
+
+<div
+  id="listPage"
+  class="hidden"
+>
+
+
+<div class="card">
+
+  <div
+    style="
+      display:flex;
+      gap:5px;
+    "
+  >
+
+    <select
+      id="filter"
+      onchange="loadLots()"
+      style="flex:1"
+    >
+
+      <option value="all">
+        Tất cả
+      </option>
+
+      <option value="Chưa đến hạn lùi hàng">
+        Chưa đến hạn lùi hàng
+      </option>
+
+      <option value="Đã đến hạn lùi hàng">
+        Đã đến hạn lùi hàng
+      </option>
+
+      <option value="Đến hạn lùi hàng hôm nay">
+        Đến hạn hôm nay
+      </option>
+
+      <option value="Hết hạn hôm nay">
+        Hết hạn hôm nay
+      </option>
+
+      <option value="Đã hết hạn">
+        Đã hết hạn
+      </option>
+
+    </select>
+
+
+    <button
+      class="btn btn-gray"
+      onclick="loadLots()"
+    >
+      🔄
+    </button>
+
+  </div>
+
+</div>
+
+
+<div id="list"></div>
+
+
+</div>
+
+
+<!-- =====================
+     LÙI HÀNG
+===================== -->
+
+<div
+  id="movePage"
+  class="hidden"
+>
+
+<div id="moveLots"></div>
+
+</div>
+
+
+</div>
+
+
 <script>
-"use strict";
+
 
 let ALL_LOTS = [];
-let searchTimer = null;
-let messageTimer = null;
-let isSaving = false;
-let isLoading = false;
 
-/* TIỆN ÍCH */
-function el(id) {
-  return document.getElementById(id);
+
+/* =========================
+   HIỂN THỊ THÔNG BÁO
+========================= */
+
+function message(text,type){
+
+  const el =
+    document.getElementById(
+      "message"
+    );
+
+
+  el.innerText =
+    text;
+
+
+  el.className =
+    "message " +
+    (
+      type === "error"
+        ? "error"
+        : "success"
+    );
+
+
+  setTimeout(function(){
+
+    el.className = "";
+
+    el.innerText = "";
+
+  },4000);
 }
 
-function esc(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
-function todayISO() {
-  const d = new Date();
-  return d.getFullYear() + "-" +
-    String(d.getMonth() + 1).padStart(2, "0") + "-" +
-    String(d.getDate()).padStart(2, "0");
-}
+/* =========================
+   CHUYỂN TAB
+========================= */
 
-function message(text, type) {
-  const box = el("message");
-  box.textContent = String(text || "");
-  box.className = "message " + (type === "error" ? "error" : "success");
-  if (messageTimer) clearTimeout(messageTimer);
-  messageTimer = setTimeout(function() {
-    box.className = "message";
-    box.textContent = "";
-  }, 5000);
-}
+function showPage(page){
 
-function formatPercent(value, fallback) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
+  const pages = [
+    "home",
+    "add",
+    "list",
+    "move"
+  ];
 
-/* CHUYỂN TAB */
-function showPage(page) {
-  ["home", "add", "list", "move"].forEach(function(p) {
-    el(p + "Page").classList.add("hidden");
-    el("tab" + p.charAt(0).toUpperCase() + p.slice(1)).classList.remove("active");
+
+  pages.forEach(function(p){
+
+    document
+      .getElementById(
+        p + "Page"
+      )
+      .classList.add("hidden");
+
+
+    document
+      .getElementById(
+        "tab" +
+        p.charAt(0).toUpperCase() +
+        p.slice(1)
+      )
+      .classList.remove("active");
+
   });
 
-  el(page + "Page").classList.remove("hidden");
-  el("tab" + page.charAt(0).toUpperCase() + page.slice(1)).classList.add("active");
 
-  if (page === "add" && !el("entry").value) {
-    el("entry").value = todayISO();
+  document
+    .getElementById(
+      page + "Page"
+    )
+    .classList.remove("hidden");
+
+
+  document
+    .getElementById(
+      "tab" +
+      page.charAt(0).toUpperCase() +
+      page.slice(1)
+    )
+    .classList.add("active");
+
+
+  if(page === "home"){
+    loadLots();
   }
 
-  if (page === "home" || page === "list" || page === "move") {
-    renderAllLists();
-  }
-}
 
-/* QUÉT MÃ VẠCH ANDROID */
-function startNativeScanner() {
-  if (window.AndroidScanner &&
-      typeof window.AndroidScanner.startScanner === "function") {
-    try {
-      window.AndroidScanner.startScanner();
-    } catch (err) {
-      message("Không mở được máy quét: " + err.message, "error");
-    }
-    return;
+  if(page === "list"){
+    loadLots();
   }
 
-  message("Chức năng quét mã chỉ hoạt động khi ứng dụng Android đã tích hợp máy quét.", "error");
+
+  if(page === "move"){
+    loadMoveLots();
+  }
+
 }
 
-/* Android gọi hàm này sau khi quét thành công */
-function setScannedCode(code) {
-  code = String(code || "").trim();
-  if (!code) return;
 
-  el("code").value = code;
-  el("productSearch").value = code;
-  el("name").value = "";
+/* =========================
+   TÌM SẢN PHẨM
+========================= */
 
-  google.script.run
-    .withSuccessHandler(function(product) {
-      if (product) {
-        selectProduct(product.code, product.name);
-        message("✅ Đã quét và tìm thấy sản phẩm: " + product.name, "success");
-      } else {
-        el("code").value = code;
-        message("Đã quét mã " + code + " nhưng chưa có trong danh mục sản phẩm.", "error");
-      }
-    })
-    .withFailureHandler(function(err) {
-      message("Không tra được sản phẩm: " + errorText(err), "error");
-    })
-    .getProduct(code);
+let searchTimer;
+
+
+function searchProduct(){
+
+  clearTimeout(
+    searchTimer
+  );
+
+
+  searchTimer =
+    setTimeout(function(){
+
+      const q =
+        document
+          .getElementById(
+            "productSearch"
+          )
+          .value
+          .trim();
+
+
+      google.script.run
+
+        .withSuccessHandler(
+          function(list){
+
+            const box =
+              document
+                .getElementById(
+                  "productResults"
+                );
+
+
+            if(
+              !list ||
+              list.length === 0
+            ){
+
+              box.classList.add(
+                "hidden"
+              );
+
+              return;
+            }
+
+
+            box.innerHTML =
+              list.map(function(x){
+
+                return `
+
+                  <div
+                    class="product-result"
+                    onclick='selectProduct(
+                      ${JSON.stringify(x.code)},
+                      ${JSON.stringify(x.name)}
+                    )'
+                  >
+
+                    <b>
+                      ${esc(x.code)}
+                    </b>
+
+                    -
+                    ${esc(x.name)}
+
+                  </div>
+
+                `;
+
+              }).join("");
+
+
+            box.classList.remove(
+              "hidden"
+            );
+
+          }
+        )
+
+        .withFailureHandler(
+          function(err){
+
+            message(
+              err.message || err,
+              "error"
+            );
+
+          }
+        )
+
+        .getProducts(q);
+
+    },250);
 }
 
-/* TÌM SẢN PHẨM */
-function searchProduct() {
-  if (searchTimer) clearTimeout(searchTimer);
 
-  searchTimer = setTimeout(function() {
-    const q = el("productSearch").value.trim();
-    const box = el("productResults");
+/* =========================
+   CHỌN SẢN PHẨM
+========================= */
 
-    if (!q) {
-      box.innerHTML = "";
-      box.classList.add("hidden");
-      return;
-    }
+function selectProduct(
+  code,
+  name
+){
 
-    google.script.run
-      .withSuccessHandler(function(list) {
-        if (!Array.isArray(list) || list.length === 0) {
-          box.innerHTML = '<div class="product-result">Không tìm thấy sản phẩm.</div>';
-          box.classList.remove("hidden");
-          return;
-        }
+  document.getElementById(
+    "code"
+  ).value = code;
 
-        box.innerHTML = list.map(function(x) {
-          return '<div class="product-result" data-code="' + esc(x.code) +
-            '" data-name="' + esc(x.name) + '" onclick="selectProductFromResult(this)">' +
-            '<b>' + esc(x.code) + '</b> — ' + esc(x.name) + '</div>';
-        }).join("");
 
-        box.classList.remove("hidden");
-      })
-      .withFailureHandler(function(err) {
-        message("Lỗi tìm sản phẩm: " + errorText(err), "error");
-      })
-      .getProducts(q);
-  }, 250);
+  document.getElementById(
+    "name"
+  ).value = name;
+
+
+  document.getElementById(
+    "productSearch"
+  ).value =
+    code + " - " + name;
+
+
+  document.getElementById(
+    "productResults"
+  ).classList.add(
+    "hidden"
+  );
 }
 
-function selectProductFromResult(node) {
-  selectProduct(node.getAttribute("data-code"), node.getAttribute("data-name"));
-}
 
-function selectProduct(code, name) {
-  el("code").value = String(code || "");
-  el("name").value = String(name || "");
-  el("productSearch").value = String(code || "") + " - " + String(name || "");
-  el("productResults").classList.add("hidden");
-}
+/* =========================
+   LƯU SỐ LÔ
+========================= */
 
-/* LƯU SỐ LÔ */
-function saveLot() {
-  if (isSaving) return;
+function saveLot(){
 
   const data = {
-    code: el("code").value.trim(),
-    name: el("name").value.trim(),
-    nsx: el("nsx").value,
-    hsd: el("hsd").value,
-    entry: el("entry").value,
-    qty: el("qty").value,
-    loc: el("loc").value.trim(),
-    note: el("note").value.trim()
+
+    code:
+      document.getElementById(
+        "code"
+      ).value.trim(),
+
+    name:
+      document.getElementById(
+        "name"
+      ).value.trim(),
+
+    nsx:
+      document.getElementById(
+        "nsx"
+      ).value,
+
+    hsd:
+      document.getElementById(
+        "hsd"
+      ).value,
+
+    entry:
+      document.getElementById(
+        "entry"
+      ).value,
+
+    qty:
+      document.getElementById(
+        "qty"
+      ).value,
+
+    loc:
+      document.getElementById(
+        "loc"
+      ).value.trim(),
+
+    note:
+      document.getElementById(
+        "note"
+      ).value.trim()
+
   };
 
-  if (!data.code) {
-    message("Vui lòng chọn hoặc quét mã sản phẩm.", "error");
+
+  if(!data.code){
+
+    message(
+      "Vui lòng chọn hoặc nhập mã sản phẩm.",
+      "error"
+    );
+
     return;
   }
 
-  if (!data.name) {
-    message("Vui lòng chọn sản phẩm trong danh mục để điền tên.", "error");
+  if(!data.name){
+    message(
+      "Vui lòng chọn hoặc nhập tên sản phẩm.",
+      "error"
+    );
+    document.getElementById("name").focus();
     return;
   }
 
-  if (!data.nsx || !data.hsd || !data.entry) {
-    message("Vui lòng nhập đầy đủ ngày sản xuất, hạn sử dụng và ngày nhập.", "error");
+  if(
+    !data.nsx ||
+    !data.hsd ||
+    !data.entry
+  ){
+
+    message(
+      "Vui lòng nhập NSX, HSD và ngày nhập.",
+      "error"
+    );
+
     return;
   }
 
-  if (data.hsd < data.nsx) {
-    message("Hạn sử dụng không được trước ngày sản xuất.", "error");
-    return;
-  }
-
-  if (Number(data.qty) < 0 || data.qty === "") {
-    message("Số lượng không hợp lệ.", "error");
-    return;
-  }
-
-  isSaving = true;
-  el("saveButton").disabled = true;
-  el("saveButton").textContent = "Đang lưu...";
 
   google.script.run
-    .withSuccessHandler(function(res) {
-      isSaving = false;
-      el("saveButton").disabled = false;
-      el("saveButton").textContent = "💾 LƯU SỐ LÔ";
 
-      message((res && res.message) || "Đã lưu số lô thành công.", "success");
-      clearForm();
-      loadLots();
-      showPage("list");
-    })
-    .withFailureHandler(function(err) {
-      isSaving = false;
-      el("saveButton").disabled = false;
-      el("saveButton").textContent = "💾 LƯU SỐ LÔ";
-      message("Không lưu được: " + errorText(err), "error");
-    })
+    .withSuccessHandler(
+      function(res){
+
+        message(
+          "✅ Đã lưu số lô thành công.",
+          "success"
+        );
+
+
+        clearForm();
+
+
+        loadLots();
+
+
+        setTimeout(
+          function(){
+            showPage("list");
+          },
+          300
+        );
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          "❌ " +
+          (
+            err.message ||
+            err
+          ),
+          "error"
+        );
+
+      }
+    )
+
     .saveLot(data);
 }
 
-function clearForm() {
-  ["productSearch", "code", "name", "nsx", "hsd", "loc", "note"].forEach(function(id) {
-    el(id).value = "";
+
+/* =========================
+   XÓA FORM
+========================= */
+
+function clearForm(){
+
+  [
+    "productSearch",
+    "code",
+    "name",
+    "nsx",
+    "hsd",
+    "entry",
+    "loc",
+    "note"
+  ].forEach(function(id){
+
+    document.getElementById(
+      id
+    ).value = "";
+
   });
 
-  el("entry").value = todayISO();
-  el("qty").value = "1";
-  el("productResults").innerHTML = "";
-  el("productResults").classList.add("hidden");
+
+  document.getElementById(
+    "qty"
+  ).value = "1";
+
 }
 
-/* TẢI DANH SÁCH TỪ APPS SCRIPT */
-function loadLots() {
-  if (isLoading) return;
-  isLoading = true;
+
+/* =========================
+   TẢI DANH SÁCH
+========================= */
+
+function loadLots(){
 
   google.script.run
-    .withSuccessHandler(function(list) {
-      isLoading = false;
-      ALL_LOTS = Array.isArray(list) ? list : [];
-      renderAllLists();
-    })
-    .withFailureHandler(function(err) {
-      isLoading = false;
-      message("Không tải được danh sách: " + errorText(err), "error");
-    })
-    .getLots("all");
+
+    .withSuccessHandler(
+      function(list){
+
+        ALL_LOTS =
+          list || [];
+
+
+        renderList(
+          ALL_LOTS
+        );
+
+
+        renderHome(
+          ALL_LOTS
+        );
+
+
+        renderMove(
+          ALL_LOTS
+        );
+
+
+        loadSummary();
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          err.message || err,
+          "error"
+        );
+
+      }
+    )
+
+    .getLots(
+      document.getElementById(
+        "filter"
+      )
+      ? document.getElementById(
+          "filter"
+        ).value
+      : "all"
+    );
 }
 
-/* LỌC VÀ HIỂN THỊ */
-function renderAllLists() {
-  const q = el("globalSearchInput").value.trim().toLocaleLowerCase("vi");
-  const filter = el("filter") ? el("filter").value : "all";
 
-  const searched = ALL_LOTS.filter(function(x) {
-    const text = [x.code, x.name, x.loc, x.note, x.status]
-      .map(function(v) { return String(v || ""); })
-      .join(" ").toLocaleLowerCase("vi");
+/* =========================
+   HIỂN THỊ DANH SÁCH
+========================= */
 
-    return !q || text.includes(q);
-  });
+function renderList(list){
 
-  const filtered = searched.filter(function(x) {
-    return filter === "all" || String(x.status || "") === filter;
-  });
+  const box =
+    document.getElementById(
+      "list"
+    );
 
-  renderList(filtered);
-  renderHome(searched);
-  renderMove(searched);
-  renderSummary(ALL_LOTS);
-}
 
-function filterGlobalSearch() {
-  renderAllLists();
-}
+  if(
+    !list ||
+    list.length === 0
+  ){
 
-function renderList(list) {
-  const box = el("list");
+    box.innerHTML =
+      `<div class="card empty">
+        Không có số lô.
+      </div>`;
 
-  if (!list.length) {
-    box.innerHTML = '<div class="card empty">Không có số lô phù hợp.</div>';
     return;
   }
 
-  box.innerHTML = list.map(card).join("");
+
+  box.innerHTML =
+    list.map(
+      card
+    ).join("");
 }
 
-function card(x) {
-  const used = formatPercent(x.used, 0);
-  const rem = formatPercent(x.rem, Math.max(0, 100 - used));
-  const status = String(x.status || "Chưa xác định");
 
-  let statusClass = "status-ok";
-  if (status.toLocaleLowerCase("vi").includes("hết hạn") ||
-      status.toLocaleLowerCase("vi").includes("đã hết")) {
-    statusClass = "status-bad";
-  } else if (status.toLocaleLowerCase("vi").includes("lùi")) {
-    statusClass = "status-warn";
+/* =========================
+   CARD SỐ LÔ
+================================ */
+
+function card(x){
+
+  let used =
+    Number(x.used);
+
+
+  let rem =
+    Number(x.rem);
+
+
+  if(
+    !Number.isFinite(used)
+  ){
+    used = 0;
   }
 
+
+  if(
+    !Number.isFinite(rem)
+  ){
+    rem =
+      Math.max(
+        0,
+        100 - used
+      );
+  }
+
+
+  const status =
+    String(
+      x.status || ""
+    );
+
+
+  let statusClass =
+    "status-ok";
+
+
+  if(
+    status.includes("lùi")
+  ){
+    statusClass =
+      "status-warn";
+  }
+
+
+  if(
+    status.includes("hết")
+  ){
+    statusClass =
+      "status-bad";
+  }
+
+
   return `
+
     <div class="lot">
-      <div class="lot-name">${esc(x.name || "Chưa có tên sản phẩm")}</div>
+
+      <div class="lot-name">
+        ${esc(x.name || "")}
+      </div>
+
 
       <div class="lot-info">
-        Mã: <b>${esc(x.code || "")}</b>
-        &nbsp;|&nbsp; SL: <b>${esc(x.qty ?? "")}</b><br>
-        NSX: ${esc(x.nsx || "")}<br>
-        HSD: <b>${esc(x.hsd || "")}</b><br>
-        Ngày nhập: ${esc(x.entry || "")}
+
+        Mã:
+        <b>${esc(x.code || "")}</b>
+
+        |
+        SL:
+        <b>${esc(x.qty ?? "")}</b>
+
+        <br>
+
+        NSX:
+        ${esc(x.nsx || "")}
+
+        |
+        HSD:
+        ${esc(x.hsd || "")}
+
+        <br>
+
+        Nhập:
+        ${esc(x.entry || "")}
+
       </div>
 
-      <span class="status ${statusClass}">${esc(status)}</span>
+
+      <span
+        class="status ${statusClass}"
+      >
+        ${esc(status)}
+      </span>
+
 
       <div class="move">
-        📅 <b>Ngày lùi hàng 20%: ${esc(x.move || "Chưa có dữ liệu")}</b>
+
+        📅
+
+        <b>
+          Ngày lùi hàng 20%:
+          ${esc(x.move || "")}
+        </b>
+
       </div>
+
 
       <div class="percent">
-        Đã sử dụng khi nhập: <b>${used.toFixed(1)}%</b>
-        &nbsp;·&nbsp; Còn lại: <b>${rem.toFixed(1)}%</b>
+
+        Đã sử dụng khi nhập:
+
+        <b>
+          ${used.toFixed(1)}%
+        </b>
+
+        ·
+
+        Còn lại:
+
+        <b>
+          ${rem.toFixed(1)}%
+        </b>
+
       </div>
 
-      ${x.loc ? `<div class="lot-info">📍 Vị trí: ${esc(x.loc)}</div>` : ""}
-      ${x.note ? `<div class="lot-info">📝 ${esc(x.note)}</div>` : ""}
+
+      ${
+        x.loc
+        ?
+        `<div class="lot-info">
+          📍 Vị trí:
+          ${esc(x.loc)}
+        </div>`
+        :
+        ""
+      }
+
+
+      ${
+        x.note
+        ?
+        `<div class="lot-info">
+          📝 ${esc(x.note)}
+        </div>`
+        :
+        ""
+      }
+
+
+      <!-- NÚT XÓA -->
 
       <div class="delete-row">
-        <button type="button" class="btn btn-red"
-          onclick="deleteLotFromCard(this)"
-          data-lot-id="${esc(String(x.id ?? ""))}">
+
+        <button
+          class="btn btn-red"
+          onclick='deleteLot(
+            ${JSON.stringify(String(x.id))}
+          )'
+        >
           🗑️ Xóa số lô
         </button>
+
       </div>
+
+
     </div>
+
   `;
 }
 
-/* XÓA SỐ LÔ
-   Hàm này chạy ở giao diện.
-   Việc xóa thật được thực hiện bởi deleteLot(id) trong Code.gs.
-*/
-function deleteLotFromCard(button) {
-  const id = String(button.getAttribute("data-lot-id") || "").trim();
 
-  if (!id) {
-    message("Không lấy được ID số lô. Hãy kiểm tra dữ liệu ID trong sheet QL_HSD.", "error");
+/* =========================
+   XÓA SỐ LÔ
+========================= */
+
+function deleteLot(id){
+
+  if(!id){
+
+    message(
+      "Không xác định được số lô.",
+      "error"
+    );
+
     return;
   }
 
-  const ok = window.confirm(
-    "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
-    "Dữ liệu sẽ bị xóa khỏi danh sách."
-  );
 
-  if (!ok) return;
+  const ok =
+    confirm(
+      "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
+      "Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách."
+    );
 
-  button.disabled = true;
-  button.textContent = "Đang xóa...";
+
+  if(!ok){
+    return;
+  }
+
 
   google.script.run
-    .withSuccessHandler(function(res) {
-      message((res && res.message) || "Đã xóa số lô thành công.", "success");
-      loadLots();
-    })
-    .withFailureHandler(function(err) {
-      button.disabled = false;
-      button.textContent = "🗑️ Xóa số lô";
-      message("Không xóa được: " + errorText(err), "error");
-    })
+
+    .withSuccessHandler(
+      function(res){
+
+        message(
+          "🗑️ " +
+          (
+            res.message ||
+            "Đã xóa số lô."
+          ),
+          "success"
+        );
+
+
+        loadLots();
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          "❌ Không xóa được: " +
+          (
+            err.message ||
+            err
+          ),
+          "error"
+        );
+
+      }
+    )
+
     .deleteLot(id);
 }
 
-/* TRANG LÙI HÀNG */
-function renderMove(list) {
-  const box = el("moveLots");
 
-  const arr = list.filter(function(x) {
-    const s = String(x.status || "");
-    return s === "Đã đến hạn lùi hàng" ||
-           s === "Đến hạn lùi hàng hôm nay";
-  });
+/* =========================
+   TRANG LÙI HÀNG
+========================= */
 
-  if (!arr.length) {
-    box.innerHTML = '<div class="card empty">✅ Hiện chưa có số lô cần lùi hàng.</div>';
+function loadMoveLots(){
+
+  google.script.run
+
+    .withSuccessHandler(
+      function(list){
+
+        renderMove(
+          list || []
+        );
+
+      }
+    )
+
+    .getLots("all");
+}
+
+
+function renderMove(list){
+
+  const box =
+    document.getElementById(
+      "moveLots"
+    );
+
+
+  const arr =
+    (list || [])
+      .filter(function(x){
+
+        return (
+          x.status ===
+            "Đã đến hạn lùi hàng" ||
+
+          x.status ===
+            "Đến hạn lùi hàng hôm nay"
+        );
+
+      });
+
+
+  if(arr.length === 0){
+
+    box.innerHTML =
+      `<div class="card empty">
+        ✅ Hiện chưa có số lô cần lùi hàng.
+      </div>`;
+
     return;
   }
 
-  box.innerHTML = arr.map(card).join("");
+
+  box.innerHTML =
+    arr.map(card).join("");
 }
 
-/* TRANG TỔNG QUAN */
-function renderHome(list) {
-  const box = el("homeLots");
 
-  if (!list.length) {
-    box.innerHTML = '<div class="card empty">Chưa có số lô hoặc không tìm thấy kết quả.</div>';
+/* =========================
+   TRANG TỔNG QUAN
+========================= */
+
+function renderHome(list){
+
+  const box =
+    document.getElementById(
+      "homeLots"
+    );
+
+
+  if(!box){
     return;
   }
 
-  box.innerHTML = list.slice(0, 20).map(card).join("");
 
-  if (list.length > 20) {
-    box.innerHTML += '<div class="card muted" style="text-align:center">Đang hiển thị 20 số lô đầu tiên. Vào Danh sách để xem thêm.</div>';
+  if(
+    !list ||
+    list.length === 0
+  ){
+
+    box.innerHTML = "";
+
+    return;
   }
+
+
+  box.innerHTML =
+    list
+      .slice(0,5)
+      .map(card)
+      .join("");
 }
 
-/* TỔNG HỢP SỐ LIỆU */
-function renderSummary(list) {
-  const total = list.length;
-  const moveToday = list.filter(function(x) {
-    return String(x.status || "") === "Đến hạn lùi hàng hôm nay";
-  }).length;
 
-  const expired = list.filter(function(x) {
-    const s = String(x.status || "").toLocaleLowerCase("vi");
-    return s.includes("đã hết hạn") || s === "hết hạn";
-  }).length;
+/* =========================
+   TỔNG SỐ
+========================= */
 
-  const needMove = list.filter(function(x) {
-    const s = String(x.status || "");
-    return s === "Đã đến hạn lùi hàng" ||
-           s === "Đến hạn lùi hàng hôm nay";
-  }).length;
+function loadSummary(){
 
-  const notMove = list.filter(function(x) {
-    return String(x.status || "") === "Chưa đến hạn lùi hàng";
-  }).length;
+  google.script.run
 
-  el("total").textContent = total;
-  el("ok").textContent = notMove;
-  el("moveCount").textContent = needMove;
-  el("today").textContent = moveToday;
-  el("expired").textContent = expired;
+    .withSuccessHandler(
+      function(s){
+
+        document.getElementById(
+          "total"
+        ).innerText =
+          s.total || 0;
+
+
+        document.getElementById(
+          "ok"
+        ).innerText =
+          s.ok || 0;
+
+
+        document.getElementById(
+          "moveCount"
+        ).innerText =
+          s.move || 0;
+
+
+        document.getElementById(
+          "today"
+        ).innerText =
+          s.today || 0;
+
+
+        document.getElementById(
+          "expired"
+        ).innerText =
+          s.expired || 0;
+
+      }
+    )
+
+    .getSummary();
 }
 
-function errorText(err) {
-  if (!err) return "Lỗi không xác định";
-  return err.message ? err.message : String(err);
+
+/* =========================
+   TÌM KIẾM TRÊN DANH SÁCH
+========================= */
+
+function globalSearch(){
+
+  const q =
+    document
+      .getElementById(
+        "globalSearch"
+      )
+      .value
+      .toLowerCase()
+      .trim();
+
+
+  if(!q){
+
+    renderList(
+      ALL_LOTS
+    );
+
+    return;
+  }
+
+
+  const result =
+    ALL_LOTS.filter(
+      function(x){
+
+        return (
+          String(x.code || "")
+            .toLowerCase()
+            .includes(q) ||
+
+          String(x.name || "")
+            .toLowerCase()
+            .includes(q)
+        );
+
+      }
+    );
+
+
+  showPage("list");
+
+
+  renderList(result);
 }
 
-/* KHỞI ĐỘNG */
-document.addEventListener("DOMContentLoaded", function() {
-  el("entry").value = todayISO();
-  loadLots();
-});
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function esc(value){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+}
+
+
+/* =========================
+   KHỞI ĐỘNG
+========================= */
+
+window.onload =
+  function(){
+
+    loadLots();
+
+  };
+
+
 </script>
+
+
 </body>
+
 </html>
