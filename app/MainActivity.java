@@ -3,7 +3,12 @@ package vn.qlnshsd.app;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.WindowManager;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
@@ -12,7 +17,6 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceError;
 import android.webkit.JsResult;
 import android.webkit.JsPromptResult;
-import android.graphics.Bitmap;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -26,7 +30,18 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Cho phép màn hình co lại khi bàn phím xuất hiện.
+        getWindow().setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
+
         webView = new WebView(this);
+
+        // Cho phép WebView nhận thao tác chạm và lấy tiêu điểm.
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
+        webView.requestFocus(View.FOCUS_DOWN);
+
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -37,6 +52,9 @@ public class MainActivity extends Activity {
         settings.setSupportZoom(true);
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
+
+        // Hỗ trợ nhập liệu và lưu trạng thái trang.
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
 
         // Xử lý tải trang web.
         webView.setWebViewClient(new WebViewClient() {
@@ -54,6 +72,17 @@ public class MainActivity extends Activity {
                     String url,
                     Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onPageFinished(
+                    WebView view,
+                    String url) {
+                super.onPageFinished(view, url);
+
+                // Để WebView sẵn sàng nhận thao tác chạm.
+                view.setFocusable(true);
+                view.setFocusableInTouchMode(true);
             }
 
             @Override
@@ -177,8 +206,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (webView != null) {
+            webView.stopLoading();
             webView.destroy();
+            webView = null;
         }
+
         super.onDestroy();
     }
 }
