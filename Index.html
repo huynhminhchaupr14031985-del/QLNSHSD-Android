@@ -267,52 +267,6 @@ textarea{
   color:#b3261e;
 }
 
-.confirm-overlay{
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(0,0,0,.55);
-}
-
-.confirm-overlay.show{
-  display:flex;
-}
-
-.confirm-box{
-  width:100%;
-  max-width:360px;
-  padding:18px;
-  border-radius:12px;
-  background:#fff;
-  box-shadow:0 8px 30px rgba(0,0,0,.25);
-}
-
-.confirm-title{
-  font-size:16px;
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-.confirm-text{
-  font-size:14px;
-  line-height:1.5;
-  margin-bottom:18px;
-}
-
-.confirm-actions{
-  display:flex;
-  gap:8px;
-}
-
-.confirm-actions button{
-  flex:1;
-  min-height:42px;
-}
-
 .hidden{
   display:none;
 }
@@ -571,12 +525,9 @@ textarea{
     </label>
 
     <input
-      type="text"
       id="name"
-      placeholder="Có thể nhập tên sản phẩm bằng tay"
+      placeholder="Nhập tên sản phẩm nếu chưa có trong danh mục"
       autocomplete="off"
-      autocapitalize="sentences"
-      spellcheck="false"
     >
 
   </div>
@@ -767,18 +718,6 @@ textarea{
 
 </div>
 
-
-<!-- Hộp xác nhận xóa riêng, không phụ thuộc confirm() của Android WebView -->
-<div id="deleteConfirm" class="confirm-overlay" role="dialog" aria-modal="true">
-  <div class="confirm-box">
-    <div class="confirm-title">⚠️ Xác nhận xóa số lô</div>
-    <div class="confirm-text">Bạn có chắc chắn muốn xóa số lô này không? Dữ liệu đã xóa sẽ không thể tự khôi phục.</div>
-    <div class="confirm-actions">
-      <button type="button" class="btn btn-gray" onclick="closeDeleteConfirm()">Hủy</button>
-      <button type="button" class="btn btn-red" onclick="confirmDeleteLot()">Xóa số lô</button>
-    </div>
-  </div>
-</div>
 
 <script>
 
@@ -1433,13 +1372,16 @@ function card(x){
       <!-- NÚT XÓA -->
 
       <div class="delete-row">
+
         <button
-          type="button"
-          class="btn btn-red delete-lot-btn"
-          data-lot-id="${esc(String(x.id || ""))}"
+          class="btn btn-red"
+          onclick='deleteLot(
+            ${JSON.stringify(String(x.id))}
+          )'
         >
           🗑️ Xóa số lô
         </button>
+
       </div>
 
 
@@ -1450,58 +1392,72 @@ function card(x){
 
 
 /* =========================
-   XÓA SỐ LÔ - TƯƠNG THÍCH ANDROID WEBVIEW
+   XÓA SỐ LÔ
 ========================= */
 
-let LOT_ID_PENDING_DELETE = "";
+function deleteLot(id){
 
-// Dùng sự kiện ủy quyền thay cho onclick nằm trong HTML được render động.
-document.addEventListener("click", function(event){
-  const button = event.target.closest(".delete-lot-btn");
-  if (!button) return;
+  if(!id){
 
-  const id = button.getAttribute("data-lot-id");
-  if (!id) {
-    message("Không xác định được số lô.", "error");
+    message(
+      "Không xác định được số lô.",
+      "error"
+    );
+
     return;
   }
 
-  LOT_ID_PENDING_DELETE = id;
-  const modal = document.getElementById("deleteConfirm");
-  if (modal) modal.classList.add("show");
-});
 
-function closeDeleteConfirm(){
-  const modal = document.getElementById("deleteConfirm");
-  if (modal) modal.classList.remove("show");
-  LOT_ID_PENDING_DELETE = "";
-}
+  const ok =
+    confirm(
+      "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
+      "Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách."
+    );
 
-function confirmDeleteLot(){
-  const id = LOT_ID_PENDING_DELETE;
-  if (!id) {
-    closeDeleteConfirm();
-    message("Không xác định được số lô.", "error");
+
+  if(!ok){
     return;
   }
 
-  const modal = document.getElementById("deleteConfirm");
-  if (modal) modal.classList.remove("show");
-
-  message("Đang xóa số lô...", "success");
 
   google.script.run
-    .withSuccessHandler(function(res){
-      LOT_ID_PENDING_DELETE = "";
-      message("🗑️ " + ((res && res.message) || "Đã xóa số lô."), "success");
-      loadLots();
-    })
-    .withFailureHandler(function(err){
-      LOT_ID_PENDING_DELETE = "";
-      message("❌ Không xóa được: " + ((err && err.message) || err || "Lỗi không xác định"), "error");
-    })
+
+    .withSuccessHandler(
+      function(res){
+
+        message(
+          "🗑️ " +
+          (
+            res.message ||
+            "Đã xóa số lô."
+          ),
+          "success"
+        );
+
+
+        loadLots();
+
+      }
+    )
+
+    .withFailureHandler(
+      function(err){
+
+        message(
+          "❌ Không xóa được: " +
+          (
+            err.message ||
+            err
+          ),
+          "error"
+        );
+
+      }
+    )
+
     .deleteLot(id);
 }
+
 
 /* =========================
    TRANG LÙI HÀNG
@@ -1671,8 +1627,6 @@ function globalSearch(){
 
     return;
   }
-
-
   const result =
     ALL_LOTS.filter(
       function(x){
