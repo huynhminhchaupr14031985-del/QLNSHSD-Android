@@ -524,19 +524,11 @@ textarea{
       Tên sản phẩm
     </label>
 
-    <div class="form-row">
-  <label for="name">Tên sản phẩm</label>
-      
-<input 
-type="text"
-id="name"
-name="productName"
-placeholder="Nhập tên sản phẩm tại đây"
-autocomplete="off"
-readonly
-onfocus="this.removeAttribute('readonly')"
-style="width:100%; min-height:45px; font-size:16px; background:#ffffff; color:#222222; pointer-events:auto; user-select:text; -webkit-user-select:text;"
->
+    <input
+      id="name"
+      placeholder="Nhập tên sản phẩm nếu chưa có trong danh mục"
+      autocomplete="off"
+    >
 
   </div>
 
@@ -627,25 +619,11 @@ style="width:100%; min-height:45px; font-size:16px; background:#ffffff; color:#2
 
 
   <button
-type="button"
-class="btn btn-green full"
-onclick="saveLot()"
-
-«»
-
-💾 LƯU SỐ LÔ
-</button>
-
-<button
-type="button"
-class="btn btn-gray full"
-style="margin-top:8px; min-height:42px;"
-onclick="resetLotForm()"
-
-«»
-
-🔄 LÀM MỚI – NHẬP SỐ LÔ TIẾP THEO
-</button>
+    class="btn btn-green full"
+    onclick="saveLot()"
+  >
+    💾 LƯU SỐ LÔ
+  </button>
 
 
 </div>
@@ -955,22 +933,32 @@ function searchProduct(){
    CHỌN SẢN PHẨM
 ========================= */
 
-function selectProduct(code, name){
+function selectProduct(
+  code,
+  name
+){
 
-document.getElementById("code").value = code || "";
+  document.getElementById(
+    "code"
+  ).value = code;
 
-document.getElementById("name").value = name || "";
 
-document.getElementById("productSearch").value =
-(code || "") + " - " + (name || "");
+  document.getElementById(
+    "name"
+  ).value = name;
 
-document.getElementById("productResults").classList.add("hidden");
 
-// Cho phép người dùng chỉnh sửa tên sản phẩm
-document.getElementById("name").readOnly = false;
+  document.getElementById(
+    "productSearch"
+  ).value =
+    code + " - " + name;
 
-// Đưa con trỏ đến ô tên sản phẩm
-document.getElementById("name").focus();
+
+  document.getElementById(
+    "productResults"
+  ).classList.add(
+    "hidden"
+  );
 }
 
 
@@ -1639,6 +1627,8 @@ function globalSearch(){
 
     return;
   }
+
+
   const result =
     ALL_LOTS.filter(
       function(x){
