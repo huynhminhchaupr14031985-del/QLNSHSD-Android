@@ -24,7 +24,7 @@ public class MainActivity extends Activity {
     private WebView webView;
 
     private static final String WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbwh8hbyWMG3XBNSHsdiULO-ipLMSYMbeOtjRmZ-42j77mhmG0i3ClD4lbMAwZOzKdZ7/exec";
+        "https://script.google.com/macros/s/AKfycby5_wM2NtymVWM0kbkJa3W2mgxUvl-IrD4IL1E00rsLKFJ3fzz2N_XdJuvcgzZtP39s/exec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
