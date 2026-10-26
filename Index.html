@@ -933,32 +933,22 @@ function searchProduct(){
    CHỌN SẢN PHẨM
 ========================= */
 
-function selectProduct(
-  code,
-  name
-){
+function selectProduct(code, name){
 
-  document.getElementById(
-    "code"
-  ).value = code;
+document.getElementById("code").value = code || "";
 
+document.getElementById("name").value = name || "";
 
-  document.getElementById(
-    "name"
-  ).value = name;
+document.getElementById("productSearch").value =
+(code || "") + " - " + (name || "");
 
+document.getElementById("productResults").classList.add("hidden");
 
-  document.getElementById(
-    "productSearch"
-  ).value =
-    code + " - " + name;
+// Cho phép người dùng chỉnh sửa tên sản phẩm
+document.getElementById("name").readOnly = false;
 
-
-  document.getElementById(
-    "productResults"
-  ).classList.add(
-    "hidden"
-  );
+// Đưa con trỏ đến ô tên sản phẩm
+document.getElementById("name").focus();
 }
 
 
