@@ -1,5 +1,5 @@
 package vn.qlnshsd.app;
-
+import android.webkit.JavascriptInterface;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -23,7 +23,30 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
 private WebView webView;
+private class KeyboardBridge {
 
+    @JavascriptInterface
+    public void showKeyboard() {
+        runOnUiThread(() -> {
+            if (webView != null) {
+                webView.requestFocus();
+
+                webView.postDelayed(() -> {
+                    InputMethodManager imm =
+                        (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+
+                    if (imm != null && webView != null) {
+                        imm.showSoftInput(
+                            webView,
+                            InputMethodManager.SHOW_IMPLICIT
+                        );
+                    }
+                }, 200);
+            }
+        });
+    }
+}
 private static final String WEB_APP_URL =
     "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec";
 
@@ -44,7 +67,10 @@ protected void onCreate(Bundle savedInstanceState) {
     setContentView(webView);
 
     WebSettings settings = webView.getSettings();
-
+    webView.addJavascriptInterface(
+    new KeyboardBridge(),
+    "AndroidKeyboard"
+);
     settings.setJavaScriptEnabled(true);
     settings.setDomStorageEnabled(true);
     settings.setDatabaseEnabled(true);
@@ -74,7 +100,31 @@ protected void onCreate(Bundle savedInstanceState) {
             view.setFocusable(true);
             view.setFocusableInTouchMode(true);
         }
-
+    view.evaluateJavascript(
+    "(function() {" +
+    "  if (window.keyboardBridgeInstalled) return;" +
+    "  window.keyboardBridgeInstalled = true;" +
+    "  document.addEventListener('focusin', function(e) {" +
+    "    var el = e.target;" +
+    "    if (el && (" +
+    "      el.id === 'name' ||" +
+    "      el.id === 'code' ||" +
+    "      el.id === 'productSearch' ||" +
+    "      el.tagName === 'TEXTAREA'" +
+    "    )) {" +
+    "      if (el.hasAttribute('readonly')) {" +
+    "        el.removeAttribute('readonly');" +
+    "      }" +
+    "      setTimeout(function() {" +
+    "        if (window.AndroidKeyboard) {" +
+    "          window.AndroidKeyboard.showKeyboard();" +
+    "        }" +
+    "      }, 100);" +
+    "    }" +
+    "  }, true);" +
+    "})();",
+    null
+);
         @Override
         public void onReceivedError(
                 WebView view,
