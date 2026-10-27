@@ -625,15 +625,25 @@ style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;
     ></textarea>
 
   </div>
-
+<div style="display:flex;gap:8px;">
 
   <button
-    class="btn btn-green full"
+    type="button"
+    class="btn btn-gray"
+    style="flex:1;"
+    onclick="clearForm();message('Đã làm mới biểu mẫu.','success');"
+  >
+    🔄 LÀM MỚI
+  </button>
+
+  <button
+    type="button"
+    class="btn btn-green"
+    style="flex:2;"
     onclick="saveLot()"
   >
     💾 LƯU SỐ LÔ
   </button>
-
 
 </div>
 
