@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 private WebView webView;
 
 private static final String WEB_APP_URL =
-    "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec";
+    "https://script.google.com/macros/s/AKfycbyl6PT8ntHFGeq1As8_y5U6Nb5tEjeVL0VyuCgVRlO6i_xe_zOJzw7RNhKM-n1I0BdW/exec";
 
 // Cầu nối hỗ trợ yêu cầu hiển thị bàn phím Android.
 private class KeyboardBridge {
