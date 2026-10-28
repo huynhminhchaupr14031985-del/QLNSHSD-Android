@@ -216,7 +216,7 @@ jobs:
                   webView.setWebViewClient(new WebViewClient());
 
                   webView.loadUrl(
-                      "https://script.google.com/macros/s/AKfycbxd6iEfT-PZIfjZoU1tUp-auIOl1YX3fwfCcn1gFhpqonRs1Cg4VQ_G27mzWsTAMeVN/exec"
+                      "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec"
                   );
               }
           }
