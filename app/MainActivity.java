@@ -78,18 +78,36 @@ protected void onCreate(Bundle savedInstanceState) {
             super.onPageStarted(view, url, favicon);  
         }  
 
-        @Override  
-        public void onPageFinished(  
-                WebView view,  
-                String url) {  
+        
+@Override
+public void onPageFinished(WebView view, String url) {
+    super.onPageFinished(view, url);
 
-            super.onPageFinished(view, url);  
+    view.setFocusable(true);
+    view.setFocusableInTouchMode(true);
 
-            view.setFocusable(true);  
-            view.setFocusableInTouchMode(true);  
+    // Kiểm tra JavaScript có chạy trong trang hay không.
+    view.evaluateJavascript(
+        "(function() {" +
+        "  var box = document.createElement('div');" +
+        "  box.id = 'android-debug-check';" +
+        "  box.style.cssText = 'position:fixed;top:0;left:0;" +
+        "  z-index:2147483647;background:#fff3cd;color:#000;" +
+        "  padding:12px;font-size:14px;max-width:100%;" +
+        "  overflow-wrap:anywhere;';" +
+        "  box.textContent = 'JS HOAT DONG' +" +
+        "    '\\nTieu de: ' + document.title +" +
+        "    '\\nTrang: ' + location.href;" +
+        "  document.body.appendChild(box);" +
+        "  return 'OK';" +
+        "})()",
+        value -> android.util.Log.d(
+            "QLNSHSD",
+            "Kiem tra JavaScript: " + value
+        )
+    );
+}
 
-            // Không tự mở bàn phím khi vừa tải xong trang.  
-        }  
 
         @Override  
         public void onReceivedError(  
