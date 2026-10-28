@@ -1,12 +1,12 @@
 package vn.qlnshsd.app;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
-import android.webkit.ConsoleMessage;
-import android.webkit.CookieManager;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
@@ -19,167 +19,198 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-    private static final String TAG = "QLNSHSD";
+private WebView webView;  
 
-    private WebView webView;
+private static final String WEB_APP_URL =  
+    "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec";  
 
-    private static final String WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec";
+@Override  
+protected void onCreate(Bundle savedInstanceState) {  
+    super.onCreate(savedInstanceState);  
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    // Cho phép màn hình co lại khi bàn phím xuất hiện.  
+    getWindow().setSoftInputMode(  
+        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE  
+    );  
 
-        getWindow().setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
-        );
+    // Tạo WebView.  
+    webView = new WebView(this);  
 
-        webView = new WebView(this);
-        setContentView(webView);
+    webView.setFocusable(true);  
+    webView.setFocusableInTouchMode(true);  
+    webView.requestFocus();  
 
-        WebSettings settings = webView.getSettings();
+    setContentView(webView);  
 
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
-        settings.setLoadsImagesAutomatically(true);
-        settings.setSupportZoom(true);
-        settings.setBuiltInZoomControls(true);
-        settings.setDisplayZoomControls(false);
-        settings.setNeedInitialFocus(true);
+    // Cấu hình WebView.  
+    WebSettings settings = webView.getSettings();  
 
-        // Hỗ trợ cookie và phiên làm việc của Google Apps Script.
-        CookieManager cookies = CookieManager.getInstance();
-        cookies.setAcceptCookie(true);
-        cookies.setAcceptThirdPartyCookies(webView, true);
+    settings.setJavaScriptEnabled(true);  
+    settings.setDomStorageEnabled(true);  
+    settings.setDatabaseEnabled(true);  
+    settings.setSupportZoom(true);  
+    settings.setBuiltInZoomControls(true);  
+    settings.setDisplayZoomControls(false);  
+    settings.setJavaScriptCanOpenWindowsAutomatically(true);  
+    settings.setNeedInitialFocus(true);  
 
-        webView.setWebViewClient(new WebViewClient() {
+    // Hỗ trợ nhập liệu trên điện thoại.  
+    settings.setLoadsImagesAutomatically(true);  
 
-            @Override
-            public boolean shouldOverrideUrlLoading(
-                    WebView view,
-                    WebResourceRequest request) {
-                return false;
-            }
+    // Xử lý tải trang.  
+    webView.setWebViewClient(new WebViewClient() {  
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Log.d(TAG, "Trang đã tải: " + url);
-            }
+        @Override  
+        public boolean shouldOverrideUrlLoading(  
+                WebView view,  
+                WebResourceRequest request) {  
 
-            @Override
-            public void onReceivedError(
-                    WebView view,
-                    WebResourceRequest request,
-                    WebResourceError error) {
+            // Cho phép WebView xử lý URL và các chuyển hướng.  
+            return false;  
+        }  
 
-                super.onReceivedError(view, request, error);
+        @Override  
+        public void onPageStarted(  
+                WebView view,  
+                String url,  
+                Bitmap favicon) {  
 
-                if (request.isForMainFrame()) {
-                    Log.e(TAG, "Lỗi tải trang: " + error.getDescription());
+            super.onPageStarted(view, url, favicon);  
+        }  
 
-                    Toast.makeText(
-                        MainActivity.this,
-                        "Không tải được trang. Kiểm tra Internet.",
-                        Toast.LENGTH_LONG
-                    ).show();
-                }
-            }
-        });
+        @Override  
+        public void onPageFinished(  
+                WebView view,  
+                String url) {  
 
-        webView.setWebChromeClient(new WebChromeClient() {
+            super.onPageFinished(view, url);  
 
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage message) {
-                Log.d(
-                    TAG,
-                    "JS " + message.message()
-                    + " | dòng " + message.lineNumber()
-                    + " | " + message.sourceId()
-                );
+            view.setFocusable(true);  
+            view.setFocusableInTouchMode(true);  
 
-                return true;
-            }
+            // Không tự mở bàn phím khi vừa tải xong trang.  
+        }  
 
-            @Override
-            public boolean onJsAlert(
-                    WebView view,
-                    String url,
-                    String message,
-                    JsResult result) {
+        @Override  
+        public void onReceivedError(  
+                WebView view,  
+                WebResourceRequest request,  
+                WebResourceError error) {  
 
-                new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Thông báo")
-                    .setMessage(message)
-                    .setPositiveButton("OK",
-                        (dialog, which) -> result.confirm())
-                    .setOnCancelListener(
-                        dialog -> result.cancel())
-                    .show();
+            super.onReceivedError(view, request, error);  
 
-                return true;
-            }
+            if (request.isForMainFrame()) {  
+                Toast.makeText(  
+                    MainActivity.this,  
+                    "Không tải được trang. Hãy kiểm tra Internet.",  
+                    Toast.LENGTH_LONG  
+                ).show();  
+            }  
+        }  
+    });  
 
-            @Override
-            public boolean onJsConfirm(
-                    WebView view,
-                    String url,
-                    String message,
-                    JsResult result) {
+    // Xử lý alert(), confirm() và prompt() của JavaScript.  
+    webView.setWebChromeClient(new WebChromeClient() {  
 
-                new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Xác nhận")
-                    .setMessage(message)
-                    .setCancelable(true)
-                    .setPositiveButton("Đồng ý",
-                        (dialog, which) -> result.confirm())
-                    .setNegativeButton("Hủy",
-                        (dialog, which) -> result.cancel())
-                    .setOnCancelListener(
-                        dialog -> result.cancel())
-                    .show();
+        @Override  
+        public boolean onJsAlert(  
+                WebView view,  
+                String url,  
+                String message,  
+                JsResult result) {  
 
-                return true;
-            }
+            new AlertDialog.Builder(MainActivity.this)  
+                .setTitle("Thông báo")  
+                .setMessage(message)  
+                .setPositiveButton(  
+                    "OK",  
+                    (dialog, which) -> result.confirm()  
+                )  
+                .setOnCancelListener(  
+                    dialog -> result.cancel()  
+                )  
+                .show();  
 
-            @Override
-            public boolean onJsPrompt(
-                    WebView view,
-                    String url,
-                    String message,
-                    String defaultValue,
-                    JsPromptResult result) {
+            return true;  
+        }  
 
-                result.cancel();
-                return true;
-            }
-        });
+        @Override  
+        public boolean onJsConfirm(  
+                WebView view,  
+                String url,  
+                String message,  
+                JsResult result) {  
 
-        webView.setFocusable(true);
-        webView.setFocusableInTouchMode(true);
+            new AlertDialog.Builder(MainActivity.this)  
+                .setTitle("Xác nhận")  
+                .setMessage(message)  
+                .setCancelable(true)  
+                .setPositiveButton(  
+                    "Đồng ý",  
+                    (dialog, which) -> result.confirm()  
+                )  
+                .setNegativeButton(  
+                    "Hủy",  
+                    (dialog, which) -> result.cancel()  
+                )  
+                .setOnCancelListener(  
+                    dialog -> result.cancel()  
+                )  
+                .show();  
 
-        webView.loadUrl(WEB_APP_URL);
-    }
+            return true;  
+        }  
 
-    @Override
-    public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
+        @Override  
+        public boolean onJsPrompt(  
+                WebView view,  
+                String url,  
+                String message,  
+                String defaultValue,  
+                JsPromptResult result) {  
 
-    @Override
-    protected void onDestroy() {
-        if (webView != null) {
-            webView.stopLoading();
-            webView.destroy();
-            webView = null;
-        }
+            // Không sử dụng prompt trong ứng dụng.  
+            result.cancel();  
 
-        super.onDestroy();
-    }
+            return true;  
+        }  
+    });  
+
+    // Đảm bảo WebView nhận được sự kiện chạm.  
+    webView.setOnTouchListener((view, event) -> {  
+
+        if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {  
+            view.requestFocus();  
+        }  
+
+        // Trả về false để không chặn sự kiện của HTML.  
+        return false;  
+    });  
+
+    // Mở Google Apps Script.  
+    webView.loadUrl(WEB_APP_URL);  
+}  
+
+@Override  
+public void onBackPressed() {  
+
+    if (webView != null && webView.canGoBack()) {  
+        webView.goBack();  
+    } else {  
+        super.onBackPressed();  
+    }  
+}  
+
+@Override  
+protected void onDestroy() {  
+
+    if (webView != null) {  
+        webView.stopLoading();  
+        webView.destroy();  
+        webView = null;  
+    }  
+
+    super.onDestroy();  
+}
+
 }
