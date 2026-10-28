@@ -1388,95 +1388,87 @@ function card(x){
       }
 
 
-      <!-- NÚT XÓA -->
+      
+<!-- NÚT XÓA SỐ LÔ -->
+<div class="delete-row">
+  <button
+    type="button"
+    class="btn btn-red"
+    data-lot-id="${String(x.id)}"
+    onclick="deleteLotFromCard(this)">
+    🗑️ Xóa số lô
+  </button>
+  
+ </div>
 
-      <div class="delete-row">
-
-        <button
-          class="btn btn-red"
-          onclick='deleteLot(
-            ${JSON.stringify(String(x.id))}
-          )'
-        >
-          🗑️ Xóa số lô
-        </button>
-
-      </div>
-
-
-    </div>
+</div>
 
   `;
 }
 
 
 /* =========================
-   XÓA SỐ LÔ
+   XÓA SỐ LÔ - ANDROID WEBVIEW
 ========================= */
 
-function deleteLot(id){
+function deleteLotFromCard(button) {
+  try {
+    if (!button) {
+      alert("Không tìm thấy nút xóa.");
+      return;
+    }
 
-  if(!id){
+    const id = button.getAttribute("data-lot-id");
 
-    message(
-      "Không xác định được số lô.",
-      "error"
-    );
+    if (!id || id === "undefined" || id === "null") {
+      alert("Không xác định được mã số lô: " + id);
+      return;
+    }
 
-    return;
-  }
+    if (
+      typeof google === "undefined" ||
+      !google.script ||
+      !google.script.run
+    ) {
+      alert("Không kết nối được Google Apps Script.");
+      return;
+    }
 
+    if (!confirm(
+      "Bạn có chắc chắn muốn xóa số lô này không?\n\nMã số lô: " + id
+    )) {
+      return;
+    }
 
-  const ok =
-    confirm(
-      "⚠️ Bạn có chắc chắn muốn XÓA số lô này không?\n\n" +
-      "Dữ liệu sau khi xóa sẽ bị xóa khỏi danh sách."
-    );
+    button.disabled = true;
+    button.textContent = "Đang xóa...";
 
-
-  if(!ok){
-    return;
-  }
-
-
-  google.script.run
-
-    .withSuccessHandler(
-      function(res){
-
-        message(
-          "🗑️ " +
-          (
-            res.message ||
-            "Đã xóa số lô."
-          ),
-          "success"
+    google.script.run
+      .withSuccessHandler(function(res) {
+        alert(
+          res && res.message
+            ? res.message
+            : "Đã gửi yêu cầu xóa."
         );
-
 
         loadLots();
+      })
+      .withFailureHandler(function(err) {
+        button.disabled = false;
+        button.textContent = "🗑️ Xóa số lô";
 
-      }
-    )
-
-    .withFailureHandler(
-      function(err){
-
-        message(
-          "❌ Không xóa được: " +
-          (
-            err.message ||
-            err
-          ),
-          "error"
+        alert(
+          "Không xóa được số lô:\n" +
+          (err && err.message ? err.message : String(err))
         );
+      })
+      .deleteLot(id);
 
-      }
-    )
-
-    .deleteLot(id);
+  } catch (err) {
+    alert("Lỗi JavaScript: " + err.message);
+  }
 }
-
+  
 
 /* =========================
    TRANG LÙI HÀNG
