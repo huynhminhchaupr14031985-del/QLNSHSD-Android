@@ -1386,21 +1386,20 @@ function card(x){
       }
 
 
-<!-- KIỂM TRA SỰ KIỆN NHẤN NÚT -->
+<!-- NÚT XÓA SỐ LÔ -->
 <div class="delete-row">
   <button
     type="button"
     class="btn btn-red"
-    onclick="alert('NÚT XÓA ĐÃ NHẬN THAO TÁC NHẤN')">
-    🗑️ Kiểm tra nút xóa
+    data-lot-id="${esc(String(x.id ?? ""))}"
+    onclick="deleteLotFromButton(this)"
+  >
+    🗑️ Xóa số lô
   </button>
 </div>
-
-
 </div>
-
-  `;
-}
+`;
+  }
 
 
 /* =========================
