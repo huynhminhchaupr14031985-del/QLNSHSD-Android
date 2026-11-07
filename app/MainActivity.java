@@ -1,12 +1,12 @@
 package vn.qlnshsd.app;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
+import android.webkit.CookieManager;
+import android.webkit.ConsoleMessage;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
@@ -19,216 +19,217 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-private WebView webView;  
+    private static final String TAG = "QLNSHSD";
 
-private static final String WEB_APP_URL =  
-    "https://script.google.com/macros/s/AKfycbwKsK5Fjqz1uxcB57z_2otp4AOU75svB7agXGPM7ZH5YGSvcPXx1TA57ShfpHzJ6bBj/exec";  
+    private WebView webView;
 
-@Override  
-protected void onCreate(Bundle savedInstanceState) {  
-    super.onCreate(savedInstanceState);  
+    private static final String WEB_APP_URL =
+        "https://script.google.com/macros/s/AKfycbwKsK5Fjqz1uxcB57z_2otp4AOU75svB7agXGPM7ZH5YGSvcPXx1TA57ShfpHzJ6bBj/exec";
 
-    // Cho phép màn hình co lại khi bàn phím xuất hiện.  
-    getWindow().setSoftInputMode(  
-        WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE  
-    );  
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    // Tạo WebView.  
-    webView = new WebView(this);  
+        getWindow().setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
 
-    webView.setFocusable(true);  
-    webView.setFocusableInTouchMode(true);  
-    webView.requestFocus();  
+        // Cho phép WebView nhận cookie khi Google chuyển hướng.
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(
+            null,
+            true
+        );
 
-    setContentView(webView);  
+        webView = new WebView(this);
+        setContentView(webView);
 
-    // Cấu hình WebView.  
-    WebSettings settings = webView.getSettings();  
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
+        webView.requestFocus();
 
-    settings.setJavaScriptEnabled(true);  
-    settings.setDomStorageEnabled(true);  
-    settings.setDatabaseEnabled(true);  
-    settings.setSupportZoom(true);  
-    settings.setBuiltInZoomControls(true);  
-    settings.setDisplayZoomControls(false);  
-    settings.setJavaScriptCanOpenWindowsAutomatically(true);  
-    settings.setNeedInitialFocus(true);  
+        WebSettings settings = webView.getSettings();
 
-    // Hỗ trợ nhập liệu trên điện thoại.  
-    settings.setLoadsImagesAutomatically(true);  
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setLoadsImagesAutomatically(true);
 
-    // Xử lý tải trang.  
-    webView.setWebViewClient(new WebViewClient() {  
+        settings.setSupportZoom(true);
+        settings.setBuiltInZoomControls(true);
+        settings.setDisplayZoomControls(false);
 
-        @Override  
-        public boolean shouldOverrideUrlLoading(  
-                WebView view,  
-                WebResourceRequest request) {  
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setNeedInitialFocus(true);
 
-            // Cho phép WebView xử lý URL và các chuyển hướng.  
-            return false;  
-        }  
+        // Theo dõi quá trình tải trang.
+        webView.setWebViewClient(new WebViewClient() {
 
-        @Override  
-        public void onPageStarted(  
-                WebView view,  
-                String url,  
-                Bitmap favicon) {  
+            @Override
+            public boolean shouldOverrideUrlLoading(
+                WebView view,
+                WebResourceRequest request
+            ) {
+                return false;
+            }
 
-            super.onPageStarted(view, url, favicon);  
-        }  
+            @Override
+            public void onPageStarted(
+                WebView view,
+                String url,
+                Bitmap favicon
+            ) {
+                super.onPageStarted(view, url, favicon);
+                Log.d(TAG, "Bat dau tai: " + url);
+            }
 
-        
-@Override
-public void onPageFinished(WebView view, String url) {
-    super.onPageFinished(view, url);
+            @Override
+            public void onPageFinished(
+                WebView view,
+                String url
+            ) {
+                super.onPageFinished(view, url);
 
-    view.setFocusable(true);
-    view.setFocusableInTouchMode(true);
+                Log.d(TAG, "Tai xong: " + url);
 
-    // Kiểm tra JavaScript có chạy trong trang hay không.
-    view.evaluateJavascript(
-        "(function() {" +
-        "  var box = document.createElement('div');" +
-        "  box.id = 'android-debug-check';" +
-        "  box.style.cssText = 'position:fixed;top:0;left:0;" +
-        "  z-index:2147483647;background:#fff3cd;color:#000;" +
-        "  padding:12px;font-size:14px;max-width:100%;" +
-        "  overflow-wrap:anywhere;';" +
-        "  box.textContent = 'JS HOAT DONG' +" +
-        "    '\\nTieu de: ' + document.title +" +
-        "    '\\nTrang: ' + location.href;" +
-        "  document.body.appendChild(box);" +
-        "  return 'OK';" +
-        "})()",
-        value -> android.util.Log.d(
-            "QLNSHSD",
-            "Kiem tra JavaScript: " + value
-        )
-    );
-}
+                view.setFocusable(true);
+                view.setFocusableInTouchMode(true);
 
+                // Kiểm tra JavaScript và địa chỉ trang đang chạy.
+                view.evaluateJavascript(
+                    "(function() {" +
+                    " var old = document.getElementById('android-debug-check');" +
+                    " if(old) old.remove();" +
+                    " var box = document.createElement('div');" +
+                    " box.id = 'android-debug-check';" +
+                    " box.style.cssText = " +
+                    " 'position:fixed;top:0;left:0;right:0;" +
+                    "z-index:2147483647;background:#fff3cd;color:#000;" +
+                    "padding:8px;font-size:12px;" +
+                    "overflow-wrap:anywhere;pointer-events:none;';" +
+                    " box.textContent = 'ANDROID WEBVIEW - JS HOAT DONG' +" +
+                    " '\\nTrang: ' + location.href;" +
+                    " document.body.appendChild(box);" +
+                    " return 'OK';" +
+                    "})()",
+                    value -> Log.d(TAG, "JavaScript check: " + value)
+                );
+            }
 
-        @Override  
-        public void onReceivedError(  
-                WebView view,  
-                WebResourceRequest request,  
-                WebResourceError error) {  
+            @Override
+            public void onReceivedError(
+                WebView view,
+                WebResourceRequest request,
+                WebResourceError error
+            ) {
+                super.onReceivedError(view, request, error);
 
-            super.onReceivedError(view, request, error);  
+                Log.e(TAG, "Loi tai trang: " + error.getDescription());
 
-            if (request.isForMainFrame()) {  
-                Toast.makeText(  
-                    MainActivity.this,  
-                    "Không tải được trang. Hãy kiểm tra Internet.",  
-                    Toast.LENGTH_LONG  
-                ).show();  
-            }  
-        }  
-    });  
+                if (request.isForMainFrame()) {
+                    Toast.makeText(
+                        MainActivity.this,
+                        "Không tải được trang. Hãy kiểm tra Internet.",
+                        Toast.LENGTH_LONG
+                    ).show();
+                }
+            }
+        });
 
-    // Xử lý alert(), confirm() và prompt() của JavaScript.  
-    webView.setWebChromeClient(new WebChromeClient() {  
+        // Xử lý JavaScript alert, confirm và prompt.
+        webView.setWebChromeClient(new WebChromeClient() {
 
-        @Override  
-        public boolean onJsAlert(  
-                WebView view,  
-                String url,  
-                String message,  
-                JsResult result) {  
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage message) {
+                Log.d(
+                    TAG,
+                    "JS Console: " + message.message() +
+                    " - Dong: " + message.lineNumber()
+                );
+                return true;
+            }
 
-            new AlertDialog.Builder(MainActivity.this)  
-                .setTitle("Thông báo")  
-                .setMessage(message)  
-                .setPositiveButton(  
-                    "OK",  
-                    (dialog, which) -> result.confirm()  
-                )  
-                .setOnCancelListener(  
-                    dialog -> result.cancel()  
-                )  
-                .show();  
+            @Override
+            public boolean onJsAlert(
+                WebView view,
+                String url,
+                String message,
+                JsResult result
+            ) {
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Thông báo")
+                    .setMessage(message)
+                    .setPositiveButton(
+                        "OK",
+                        (dialog, which) -> result.confirm()
+                    )
+                    .setOnCancelListener(
+                        dialog -> result.cancel()
+                    )
+                    .show();
 
-            return true;  
-        }  
+                return true;
+            }
 
-        @Override  
-        public boolean onJsConfirm(  
-                WebView view,  
-                String url,  
-                String message,  
-                JsResult result) {  
+            @Override
+            public boolean onJsConfirm(
+                WebView view,
+                String url,
+                String message,
+                JsResult result
+            ) {
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Xác nhận xóa số lô")
+                    .setMessage(message)
+                    .setCancelable(false)
+                    .setPositiveButton(
+                        "Đồng ý",
+                        (dialog, which) -> result.confirm()
+                    )
+                    .setNegativeButton(
+                        "Hủy",
+                        (dialog, which) -> result.cancel()
+                    )
+                    .show();
 
-            new AlertDialog.Builder(MainActivity.this)  
-                .setTitle("Xác nhận")  
-                .setMessage(message)  
-                .setCancelable(true)  
-                .setPositiveButton(  
-                    "Đồng ý",  
-                    (dialog, which) -> result.confirm()  
-                )  
-                .setNegativeButton(  
-                    "Hủy",  
-                    (dialog, which) -> result.cancel()  
-                )  
-                .setOnCancelListener(  
-                    dialog -> result.cancel()  
-                )  
-                .show();  
+                return true;
+            }
 
-            return true;  
-        }  
+            @Override
+            public boolean onJsPrompt(
+                WebView view,
+                String url,
+                String message,
+                String defaultValue,
+                JsPromptResult result
+            ) {
+                result.cancel();
+                return true;
+            }
+        });
 
-        @Override  
-        public boolean onJsPrompt(  
-                WebView view,  
-                String url,  
-                String message,  
-                String defaultValue,  
-                JsPromptResult result) {  
+        // Mở ứng dụng Google Apps Script.
+        webView.loadUrl(WEB_APP_URL);
+    }
 
-            // Không sử dụng prompt trong ứng dụng.  
-            result.cancel();  
+    @Override
+    public void onBackPressed() {
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
 
-            return true;  
-        }  
-    });  
+    @Override
+    protected void onDestroy() {
+        if (webView != null) {
+            webView.stopLoading();
+            webView.destroy();
+            webView = null;
+        }
 
-    // Đảm bảo WebView nhận được sự kiện chạm.  
-    webView.setOnTouchListener((view, event) -> {  
-
-        if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {  
-            view.requestFocus();  
-        }  
-
-        // Trả về false để không chặn sự kiện của HTML.  
-        return false;  
-    });  
-
-    // Mở Google Apps Script.  
-    webView.loadUrl(WEB_APP_URL);  
-}  
-
-@Override  
-public void onBackPressed() {  
-
-    if (webView != null && webView.canGoBack()) {  
-        webView.goBack();  
-    } else {  
-        super.onBackPressed();  
-    }  
-}  
-
-@Override  
-protected void onDestroy() {  
-
-    if (webView != null) {  
-        webView.stopLoading();  
-        webView.destroy();  
-        webView = null;  
-    }  
-
-    super.onDestroy();  
-}
-
+        super.onDestroy();
+    }
 }
