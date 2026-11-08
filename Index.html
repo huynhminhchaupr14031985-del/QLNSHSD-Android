@@ -1391,7 +1391,7 @@ function card(x){
     type="button"
     class="btn btn-red"
     data-lot-id="${esc(String(x.id ?? ""))}"
-    onclick="deleteLotFromButton(button)"
+    onclick="deleteLotFromButton(this)"
   >
     🗑️ Xóa số lô
   </button>
@@ -1415,7 +1415,7 @@ function deleteLotFromButton(button) {
     const id = button.getAttribute("data-lot-id");
 
     if (!id || id === "undefined" || id === "null") {
-      alert("Không xác định được mã số lô: " + id);
+      alert("Không xác định được mã số lô.");
       return;
     }
 
@@ -1428,7 +1428,7 @@ function deleteLotFromButton(button) {
       return;
     }
 
-    if (!confirm(
+    if (!window.confirm(
       "Bạn có chắc chắn muốn xóa số lô này không?\n\nMã số lô: " + id
     )) {
       return;
@@ -1439,21 +1439,25 @@ function deleteLotFromButton(button) {
 
     google.script.run
       .withSuccessHandler(function(res) {
+
         alert(
           res && res.message
             ? res.message
-            : "Đã gửi yêu cầu xóa."
+            : "Đã xóa số lô."
         );
 
         loadLots();
       })
       .withFailureHandler(function(err) {
+
         button.disabled = false;
         button.textContent = "🗑️ Xóa số lô";
 
         alert(
           "Không xóa được số lô:\n" +
-          (err && err.message ? err.message : String(err))
+          (err && err.message
+            ? err.message
+            : String(err))
         );
       })
       .deleteLot(id);
