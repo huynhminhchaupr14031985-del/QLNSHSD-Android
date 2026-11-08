@@ -1,4 +1,6 @@
+
 name: Build Android APK
+
 on:
   push:
     branches:
@@ -30,6 +32,7 @@ jobs:
           mkdir -p android/app/src/main/java/vn/qlnshsd/app
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/values
 
           cat > android/settings.gradle <<'EOF'
           pluginManagement {
@@ -71,8 +74,8 @@ jobs:
                   applicationId 'vn.qlnshsd.app'
                   minSdk 23
                   targetSdk 28
-                  versionCode 2
-                  versionName '1.1'
+                  versionCode 3
+                  versionName '1.2'
               }
 
               compileOptions {
@@ -151,8 +154,6 @@ jobs:
           </adaptive-icon>
           EOF
 
-          mkdir -p android/app/src/main/res/values
-
           cat > android/app/src/main/res/values/colors.xml <<'EOF'
           <resources>
               <color name="launcher_background">#176B43</color>
@@ -171,14 +172,15 @@ jobs:
 
               <application
                   android:allowBackup="false"
-                  android:label="QL NSX-HSD"
+                  android:label="Quản lý NSX-HSD"
                   android:icon="@drawable/ic_launcher_box"
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
                   <activity
                       android:name=".MainActivity"
-                      android:exported="true">
+                      android:exported="true"
+                      android:configChanges="orientation|screenSize|keyboardHidden">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -194,29 +196,125 @@ jobs:
           package vn.qlnshsd.app;
 
           import android.app.Activity;
+          import android.app.AlertDialog;
           import android.os.Bundle;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
+          import android.webkit.WebChromeClient;
           import android.webkit.WebSettings;
+          import android.webkit.JsResult;
+          import android.webkit.JsPromptResult;
+          import android.webkit.ConsoleMessage;
 
           public class MainActivity extends Activity {
+
+              private WebView webView;
+
+              private static final String APP_URL =
+                  "https://script.google.com/macros/s/AKfycbxRRS4XvcheAS7FZSpktziDI_-RTIm6timN6-XD5_2vyo7EQsuHhyIrpxOiVDehbEZI/exec";
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  WebView webView = new WebView(this);
+                  webView = new WebView(this);
                   setContentView(webView);
 
                   WebSettings settings = webView.getSettings();
+
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                  settings.setSupportMultipleWindows(false);
+                  settings.setLoadsImagesAutomatically(true);
 
                   webView.setWebViewClient(new WebViewClient());
 
-                  webView.loadUrl(
-                      "https://script.google.com/macros/s/AKfycbxRRS4XvcheAS7FZSpktziDI_-RTIm6timN6-XD5_2vyo7EQsuHhyIrpxOiVDehbEZI/exec"
-                  );
+                  webView.setWebChromeClient(new WebChromeClient() {
+
+                      @Override
+                      public boolean onJsAlert(
+                          WebView view,
+                          String url,
+                          String message,
+                          JsResult result
+                      ) {
+                          new AlertDialog.Builder(MainActivity.this)
+                              .setTitle("Thông báo")
+                              .setMessage(message)
+                              .setPositiveButton(
+                                  "Đồng ý",
+                                  (dialog, which) -> result.confirm()
+                              )
+                              .setOnCancelListener(
+                                  dialog -> result.cancel()
+                              )
+                              .show();
+
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onJsConfirm(
+                          WebView view,
+                          String url,
+                          String message,
+                          JsResult result
+                      ) {
+                          new AlertDialog.Builder(MainActivity.this)
+                              .setTitle("Xác nhận xóa số lô")
+                              .setMessage(message)
+                              .setPositiveButton(
+                                  "Đồng ý",
+                                  (dialog, which) -> result.confirm()
+                              )
+                              .setNegativeButton(
+                                  "Hủy",
+                                  (dialog, which) -> result.cancel()
+                              )
+                              .setOnCancelListener(
+                                  dialog -> result.cancel()
+                              )
+                              .show();
+
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onJsPrompt(
+                          WebView view,
+                          String url,
+                          String message,
+                          String defaultValue,
+                          JsPromptResult result
+                      ) {
+                          result.cancel();
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onConsoleMessage(
+                          ConsoleMessage message
+                      ) {
+                          android.util.Log.d(
+                              "QLNSX_HSD",
+                              message.message()
+                          );
+                          return true;
+                      }
+                  });
+
+                  webView.loadUrl(APP_URL);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
               }
           }
           EOF
