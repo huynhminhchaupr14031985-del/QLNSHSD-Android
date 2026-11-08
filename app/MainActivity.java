@@ -1,6 +1,4 @@
-
 package vn.qlnshsd.app;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Bitmap;
