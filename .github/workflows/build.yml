@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,14 +27,20 @@ jobs:
         with:
           gradle-version: '8.0'
 
+      # Kiểm tra mã nguồn Java thật trong GitHub.
       - name: Check MainActivity Source
         run: |
+          echo "Kiem tra MainActivity.java"
+
           if [ ! -f app/src/main/java/vn/qlnshsd/app/MainActivity.java ]; then
             echo "ERROR: Khong tim thay MainActivity.java"
             exit 1
           fi
-          echo "Da tim thay MainActivity.java"
 
+          echo "Da tim thay MainActivity.java"
+          grep -n "WEB_APP_URL" app/src/main/java/vn/qlnshsd/app/MainActivity.java || true
+
+      # Tạo cấu trúc dự án Android.
       - name: Create Android Project
         run: |
           mkdir -p android/app/src/main/java/vn/qlnshsd/app
@@ -41,7 +48,9 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
           mkdir -p android/app/src/main/res/values
 
-          cp app/src/main/java/vn/qlnshsd/app/MainActivity.java android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
+          # Sao chép MainActivity.java thật từ GitHub.
+          cp app/src/main/java/vn/qlnshsd/app/MainActivity.java \
+             android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
 
           cat > android/settings.gradle <<'EOF'
           pluginManagement {
@@ -51,6 +60,7 @@ jobs:
                   gradlePluginPortal()
               }
           }
+
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -58,6 +68,7 @@ jobs:
                   mavenCentral()
               }
           }
+
           rootProject.name = 'QLNSHSD'
           include ':app'
           EOF
@@ -72,9 +83,11 @@ jobs:
           plugins {
               id 'com.android.application'
           }
+
           android {
               namespace 'vn.qlnshsd.app'
               compileSdk 34
+
               defaultConfig {
                   applicationId 'vn.qlnshsd.app'
                   minSdk 23
@@ -82,6 +95,7 @@ jobs:
                   versionCode 3
                   versionName '1.2'
               }
+
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
@@ -95,14 +109,23 @@ jobs:
               android:height="108dp"
               android:viewportWidth="108"
               android:viewportHeight="108">
-              <path android:fillColor="#176B43"
+
+              <path
+                  android:fillColor="#176B43"
                   android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
-              <path android:fillColor="#DDA568"
+
+              <path
+                  android:fillColor="#DDA568"
                   android:pathData="M18,35 L54,17 L91,35 L54,55 Z" />
-              <path android:fillColor="#C78A4B"
+
+              <path
+                  android:fillColor="#C78A4B"
                   android:pathData="M18,35 L54,55 L54,88 L18,68 Z" />
-              <path android:fillColor="#A96C39"
+
+              <path
+                  android:fillColor="#A96C39"
                   android:pathData="M54,55 L91,35 L91,68 L54,88 Z" />
+
           </vector>
           EOF
 
@@ -121,38 +144,54 @@ jobs:
 
           cat > android/app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.CAMERA" />
-              <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+              <uses-feature
+                  android:name="android.hardware.camera"
+                  android:required="false" />
+
               <application
                   android:allowBackup="false"
                   android:label="QL NSX-HSD"
                   android:icon="@drawable/ic_launcher_box"
                   android:usesCleartextTraffic="false"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
                       android:windowSoftInputMode="adjustResize">
+
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
+
                   </activity>
               </application>
           </manifest>
           EOF
 
+      # Kiểm tra URL trong mã Java thực tế trước khi Build.
       - name: Verify Android Source
         run: |
-          grep -n "AKfycbx1RNnlPHHC0LfJHWoqFrEhvt8MfxPKlsCX0SmMzOzByDCjVDdglIlnMVre-z8AdNse" android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
-          grep -n "ANDROID WEBVIEW" android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
+          echo "===== MAIN ACTIVITY ====="
+          grep -n "AKfycbx1RNnlPHHC0LfJHWoqFrEhvt8MfxPKlsCX0SmMzOzByDCjVDdglIlnMVre-z8AdNse" \
+          android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
 
+          echo "===== CHECK DEBUG CODE ====="
+          grep -n "ANDROID WEBVIEW" \
+          android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
+
+      # Build APK.
       - name: Build APK
         run: |
           gradle --version
           gradle -p android assembleDebug
 
+      # Lưu APK.
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
