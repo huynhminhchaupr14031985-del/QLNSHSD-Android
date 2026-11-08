@@ -1,4 +1,6 @@
+
 name: Build Android APK
+
 on:
   push:
     branches:
@@ -25,11 +27,30 @@ jobs:
         with:
           gradle-version: '8.0'
 
+      # Kiểm tra mã nguồn Java thật trong GitHub.
+      - name: Check MainActivity Source
+        run: |
+          echo "Kiem tra MainActivity.java"
+
+          if [ ! -f app/src/main/java/vn/qlnshsd/app/MainActivity.java ]; then
+            echo "ERROR: Khong tim thay MainActivity.java"
+            exit 1
+          fi
+
+          echo "Da tim thay MainActivity.java"
+          grep -n "WEB_APP_URL" app/src/main/java/vn/qlnshsd/app/MainActivity.java || true
+
+      # Tạo cấu trúc dự án Android.
       - name: Create Android Project
         run: |
           mkdir -p android/app/src/main/java/vn/qlnshsd/app
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/values
+
+          # Sao chép MainActivity.java thật từ GitHub.
+          cp app/src/main/java/vn/qlnshsd/app/MainActivity.java \
+             android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
 
           cat > android/settings.gradle <<'EOF'
           pluginManagement {
@@ -71,8 +92,8 @@ jobs:
                   applicationId 'vn.qlnshsd.app'
                   minSdk 23
                   targetSdk 28
-                  versionCode 2
-                  versionName '1.1'
+                  versionCode 3
+                  versionName '1.2'
               }
 
               compileOptions {
@@ -105,42 +126,6 @@ jobs:
                   android:fillColor="#A96C39"
                   android:pathData="M54,55 L91,35 L91,68 L54,88 Z" />
 
-              <path
-                  android:fillColor="#F4D4A0"
-                  android:pathData="M39,25 L48,21 L80,38 L71,43 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M8,29 L32,29 L32,48 L8,48 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M75,59 L100,59 L100,79 L75,79 Z" />
-
-              <path
-                  android:fillColor="#176B43"
-                  android:pathData="M12,33 L28,33 L28,44 L12,44 Z" />
-
-              <path
-                  android:fillColor="#176B43"
-                  android:pathData="M79,63 L96,63 L96,75 L79,75 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M13,25 L17,25 L17,31 L13,31 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M24,25 L28,25 L28,31 L24,31 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M80,55 L84,55 L84,61 L80,61 Z" />
-
-              <path
-                  android:fillColor="#FFFFFF"
-                  android:pathData="M91,55 L95,55 L95,61 L91,61 Z" />
-
           </vector>
           EOF
 
@@ -150,8 +135,6 @@ jobs:
               <foreground android:drawable="@drawable/ic_launcher_box" />
           </adaptive-icon>
           EOF
-
-          mkdir -p android/app/src/main/res/values
 
           cat > android/app/src/main/res/values/colors.xml <<'EOF'
           <resources>
@@ -173,12 +156,13 @@ jobs:
                   android:allowBackup="false"
                   android:label="QL NSX-HSD"
                   android:icon="@drawable/ic_launcher_box"
-                  android:usesCleartextTraffic="true"
+                  android:usesCleartextTraffic="false"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
                   <activity
                       android:name=".MainActivity"
-                      android:exported="true">
+                      android:exported="true"
+                      android:windowSoftInputMode="adjustResize">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -190,45 +174,28 @@ jobs:
           </manifest>
           EOF
 
-          cat > android/app/src/main/java/vn/qlnshsd/app/MainActivity.java <<'EOF'
-          package vn.qlnshsd.app;
+      # Kiểm tra URL trong mã Java thực tế trước khi Build.
+      - name: Verify Android Source
+        run: |
+          echo "===== MAIN ACTIVITY ====="
+          grep -n "AKfycbx1RNnlPHHC0LfJHWoqFrEhvt8MfxPKlsCX0SmMzOzByDCjVDdglIlnMVre-z8AdNse" \
+          android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
 
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          import android.webkit.WebSettings;
+          echo "===== CHECK DEBUG CODE ====="
+          grep -n "ANDROID WEBVIEW" \
+          android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
 
-          public class MainActivity extends Activity {
-
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  WebView webView = new WebView(this);
-                  setContentView(webView);
-
-                  WebSettings settings = webView.getSettings();
-                  settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
-
-                  webView.setWebViewClient(new WebViewClient());
-
-                  webView.loadUrl(
-                      "https://script.google.com/macros/s/AKfycbzV6f9WfzTTlEzhuf5L02p1yljNMebTc6w_Xp0d1ta2ZYWtUoRRYhAAJGhhlL60DDWv/exec"
-                  );
-              }
-          }
-          EOF
-
+      # Build APK.
       - name: Build APK
         run: |
           gradle --version
           gradle -p android assembleDebug
 
+      # Lưu APK.
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: QL-NSX-HSD-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
