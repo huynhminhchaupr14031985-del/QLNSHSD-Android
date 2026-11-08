@@ -1,4 +1,6 @@
+
 package vn.qlnshsd.app;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Bitmap;
@@ -23,6 +25,7 @@ public class MainActivity extends Activity {
 
     private WebView webView;
 
+    // Địa chỉ Google Apps Script mới nhất.
     private static final String WEB_APP_URL =
         "https://script.google.com/macros/s/AKfycbx1RNnlPHHC0LfJHWoqFrEhvt8MfxPKlsCX0SmMzOzByDCjVDdglIlnMVre-z8AdNse/exec";
 
@@ -30,21 +33,21 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Điều chỉnh màn hình khi bàn phím xuất hiện.
         getWindow().setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         );
 
-        // Cho phép WebView nhận cookie khi Google chuyển hướng.
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.setAcceptCookie(true);
-        cookieManager.setAcceptThirdPartyCookies(
-            null,
-            true
-        );
-
+        // Khởi tạo WebView.
         webView = new WebView(this);
         setContentView(webView);
 
+        // Cấu hình Cookie.
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setAcceptCookie(true);
+        cookieManager.setAcceptThirdPartyCookies(webView, true);
+
+        // Cấu hình WebView.
         webView.setFocusable(true);
         webView.setFocusableInTouchMode(true);
         webView.requestFocus();
@@ -63,7 +66,10 @@ public class MainActivity extends Activity {
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setNeedInitialFocus(true);
 
-        // Theo dõi quá trình tải trang.
+        // Cho phép nội dung trang sử dụng cửa sổ JavaScript.
+        settings.setSupportMultipleWindows(true);
+
+        // Xử lý tải trang và chuyển hướng Google Apps Script.
         webView.setWebViewClient(new WebViewClient() {
 
             @Override
@@ -71,6 +77,7 @@ public class MainActivity extends Activity {
                 WebView view,
                 WebResourceRequest request
             ) {
+                Log.d(TAG, "Chuyen huong: " + request.getUrl());
                 return false;
             }
 
@@ -81,6 +88,7 @@ public class MainActivity extends Activity {
                 Bitmap favicon
             ) {
                 super.onPageStarted(view, url, favicon);
+
                 Log.d(TAG, "Bat dau tai: " + url);
             }
 
@@ -96,8 +104,8 @@ public class MainActivity extends Activity {
                 view.setFocusable(true);
                 view.setFocusableInTouchMode(true);
 
-                // Kiểm tra JavaScript và địa chỉ trang đang chạy.
-                view.evaluateJavascript(
+                // Kiểm tra JavaScript có hoạt động không.
+                String debugScript =
                     "(function() {" +
                     " var old = document.getElementById('android-debug-check');" +
                     " if(old) old.remove();" +
@@ -112,7 +120,10 @@ public class MainActivity extends Activity {
                     " '\\nTrang: ' + location.href;" +
                     " document.body.appendChild(box);" +
                     " return 'OK';" +
-                    "})()",
+                    "})()";
+
+                view.evaluateJavascript(
+                    debugScript,
                     value -> Log.d(TAG, "JavaScript check: " + value)
                 );
             }
@@ -125,7 +136,10 @@ public class MainActivity extends Activity {
             ) {
                 super.onReceivedError(view, request, error);
 
-                Log.e(TAG, "Loi tai trang: " + error.getDescription());
+                Log.e(
+                    TAG,
+                    "Loi tai trang: " + error.getDescription()
+                );
 
                 if (request.isForMainFrame()) {
                     Toast.makeText(
@@ -135,21 +149,39 @@ public class MainActivity extends Activity {
                     ).show();
                 }
             }
+
+            @Override
+            public void onReceivedHttpError(
+                WebView view,
+                WebResourceRequest request,
+                android.webkit.WebResourceResponse response
+            ) {
+                super.onReceivedHttpError(view, request, response);
+
+                Log.e(
+                    TAG,
+                    "HTTP Error: " + response.getStatusCode()
+                    + " - " + request.getUrl()
+                );
+            }
         });
 
-        // Xử lý JavaScript alert, confirm và prompt.
+        // Xử lý JavaScript và các thông báo trên trang.
         webView.setWebChromeClient(new WebChromeClient() {
 
             @Override
             public boolean onConsoleMessage(ConsoleMessage message) {
+
                 Log.d(
                     TAG,
-                    "JS Console: " + message.message() +
-                    " - Dong: " + message.lineNumber()
+                    "JS Console: " + message.message()
+                    + " - Dong: " + message.lineNumber()
                 );
+
                 return true;
             }
 
+            // Xử lý alert().
             @Override
             public boolean onJsAlert(
                 WebView view,
@@ -172,6 +204,7 @@ public class MainActivity extends Activity {
                 return true;
             }
 
+            // Xử lý confirm().
             @Override
             public boolean onJsConfirm(
                 WebView view,
@@ -196,6 +229,7 @@ public class MainActivity extends Activity {
                 return true;
             }
 
+            // Không sử dụng prompt().
             @Override
             public boolean onJsPrompt(
                 WebView view,
@@ -207,14 +241,27 @@ public class MainActivity extends Activity {
                 result.cancel();
                 return true;
             }
+
+            // Xử lý cửa sổ mới nếu trang yêu cầu.
+            @Override
+            public boolean onCreateWindow(
+                WebView view,
+                boolean isDialog,
+                boolean isUserGesture,
+                android.os.Message resultMsg
+            ) {
+                return false;
+            }
         });
 
-        // Mở ứng dụng Google Apps Script.
+        // Tải Google Apps Script.
         webView.loadUrl(WEB_APP_URL);
     }
 
+    // Nút quay lại điện thoại.
     @Override
     public void onBackPressed() {
+
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
@@ -222,8 +269,10 @@ public class MainActivity extends Activity {
         }
     }
 
+    // Giải phóng WebView.
     @Override
     protected void onDestroy() {
+
         if (webView != null) {
             webView.stopLoading();
             webView.destroy();
