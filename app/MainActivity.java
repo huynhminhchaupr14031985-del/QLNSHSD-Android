@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
 
     // Địa chỉ Google Apps Script mới nhất.
     private static final String WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbxRRS4XvcheAS7FZSpktziDI_-RTIm6timN6-XD5_2vyo7EQsuHhyIrpxOiVDehbEZI/exec";
+        "https://script.google.com/macros/s/AKfycbydeyc3jiEzhx5DU8AK1jISCAKFa3TDx1URMGBr0gpd29JNxB4iQ1dUOCLCmkLmkuRH/exec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
