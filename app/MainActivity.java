@@ -1,7 +1,10 @@
 package vn.qlnshsd.app;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -9,6 +12,7 @@ import android.webkit.CookieManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -20,10 +24,14 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
     private static final String TAG = "QLNSHSD";
+    private static final int FILE_CHOOSER_REQUEST = 1001;
 
     private WebView webView;
 
-    // Địa chỉ Google Apps Script mới nhất.
+    // Nhận đường dẫn tệp được chọn từ Android.
+    private ValueCallback<Uri[]> filePathCallback;
+
+    // Địa chỉ Google Apps Script.
     private static final String WEB_APP_URL =
         "https://script.google.com/macros/s/AKfycbydeyc3jiEzhx5DU8AK1jISCAKFa3TDx1URMGBr0gpd29JNxB4iQ1dUOCLCmkLmkuRH/exec";
 
@@ -31,7 +39,6 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Điều chỉnh màn hình khi bàn phím xuất hiện.
         getWindow().setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         );
@@ -40,12 +47,11 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         setContentView(webView);
 
-        // Cấu hình Cookie.
+        // Cookie.
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
         cookieManager.setAcceptThirdPartyCookies(webView, true);
 
-        // Cấu hình WebView.
         webView.setFocusable(true);
         webView.setFocusableInTouchMode(true);
         webView.requestFocus();
@@ -63,11 +69,9 @@ public class MainActivity extends Activity {
 
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
         settings.setNeedInitialFocus(true);
-
-        // Cho phép nội dung trang sử dụng cửa sổ JavaScript.
         settings.setSupportMultipleWindows(true);
 
-        // Xử lý tải trang và chuyển hướng Google Apps Script.
+        // Xử lý tải trang.
         webView.setWebViewClient(new WebViewClient() {
 
             @Override
@@ -86,7 +90,6 @@ public class MainActivity extends Activity {
                 Bitmap favicon
             ) {
                 super.onPageStarted(view, url, favicon);
-
                 Log.d(TAG, "Bat dau tai: " + url);
             }
 
@@ -102,7 +105,7 @@ public class MainActivity extends Activity {
                 view.setFocusable(true);
                 view.setFocusableInTouchMode(true);
 
-                // Kiểm tra JavaScript có hoạt động không.
+                // Kiểm tra JavaScript.
                 String debugScript =
                     "(function() {" +
                     " var old = document.getElementById('android-debug-check');" +
@@ -134,10 +137,7 @@ public class MainActivity extends Activity {
             ) {
                 super.onReceivedError(view, request, error);
 
-                Log.e(
-                    TAG,
-                    "Loi tai trang: " + error.getDescription()
-                );
+                Log.e(TAG, "Loi tai trang: " + error.getDescription());
 
                 if (request.isForMainFrame()) {
                     Toast.makeText(
@@ -164,19 +164,58 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Xử lý JavaScript và các thông báo trên trang.
+        // Xử lý JavaScript và chọn tệp.
         webView.setWebChromeClient(new WebChromeClient() {
 
             @Override
             public boolean onConsoleMessage(ConsoleMessage message) {
-
                 Log.d(
                     TAG,
                     "JS Console: " + message.message()
                     + " - Dong: " + message.lineNumber()
                 );
-
                 return true;
+            }
+
+            // MỞ BỘ CHỌN TỆP CỦA ANDROID.
+            @Override
+            public boolean onShowFileChooser(
+                WebView webView,
+                ValueCallback<Uri[]> filePathCallback,
+                FileChooserParams fileChooserParams
+            ) {
+
+                // Hủy yêu cầu chọn tệp trước nếu còn tồn tại.
+                if (MainActivity.this.filePathCallback != null) {
+                    MainActivity.this.filePathCallback.onReceiveValue(null);
+                }
+
+                MainActivity.this.filePathCallback = filePathCallback;
+
+                try {
+                    Intent intent = fileChooserParams.createIntent();
+
+                    startActivityForResult(
+                        intent,
+                        FILE_CHOOSER_REQUEST
+                    );
+
+                    return true;
+
+                } catch (Exception e) {
+
+                    Log.e(TAG, "Khong mo duoc bo chon tep", e);
+
+                    MainActivity.this.filePathCallback = null;
+
+                    Toast.makeText(
+                        MainActivity.this,
+                        "Không thể mở trình chọn tệp.",
+                        Toast.LENGTH_LONG
+                    ).show();
+
+                    return false;
+                }
             }
 
             // Xử lý alert().
@@ -240,7 +279,7 @@ public class MainActivity extends Activity {
                 return true;
             }
 
-            // Xử lý cửa sổ mới nếu trang yêu cầu.
+            // Xử lý cửa sổ mới.
             @Override
             public boolean onCreateWindow(
                 WebView view,
@@ -256,10 +295,43 @@ public class MainActivity extends Activity {
         webView.loadUrl(WEB_APP_URL);
     }
 
+    // NHẬN KẾT QUẢ SAU KHI CHỌN TỆP.
+    @Override
+    protected void onActivityResult(
+        int requestCode,
+        int resultCode,
+        Intent data
+    ) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == FILE_CHOOSER_REQUEST) {
+
+            if (filePathCallback == null) {
+                return;
+            }
+
+            Uri[] results = null;
+
+            if (resultCode == Activity.RESULT_OK) {
+                results = WebChromeClient.FileChooserParams.parseResult(
+                    resultCode,
+                    data
+                );
+
+                // Dự phòng nếu thiết bị trả về một URI đơn.
+                if (results == null && data != null && data.getData() != null) {
+                    results = new Uri[]{data.getData()};
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+        }
+    }
+
     // Nút quay lại điện thoại.
     @Override
     public void onBackPressed() {
-
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
@@ -267,9 +339,14 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Giải phóng WebView.
+    // Giải phóng tài nguyên.
     @Override
     protected void onDestroy() {
+
+        if (filePathCallback != null) {
+            filePathCallback.onReceiveValue(null);
+            filePathCallback = null;
+        }
 
         if (webView != null) {
             webView.stopLoading();
@@ -279,4 +356,5 @@ public class MainActivity extends Activity {
 
         super.onDestroy();
     }
-}
+        }
+
