@@ -1,3 +1,4 @@
+```java
 package vn.qlnshsd.app;
 
 import android.app.Activity;
@@ -33,7 +34,7 @@ public class MainActivity extends Activity {
 
     // Địa chỉ Google Apps Script.
     private static final String WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbz2qQrUaNPWAA7jRC_hmUolC4Ps2n37MWykQIQCwNZ07icpx27dxAiaJl_BV2tnlPnS/exec";
+        "https://script.google.com/macros/s/AKfycbydeyc3jiEzhx5DU8AK1jISCAKFa3TDx1URMGBr0gpd29JNxB4iQ1dUOCLCmkLmkuRH/exec";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -356,5 +357,5 @@ public class MainActivity extends Activity {
 
         super.onDestroy();
     }
-        }
-
+}
+```
