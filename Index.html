@@ -508,33 +508,41 @@ textarea{
       Mã sản phẩm
     </label>
 
-    <input
-      id="code"
-      placeholder="Chọn, quét hoặc nhập mã sản phẩm"
-      autocomplete="off"
-    >
+    <div style="display:flex;gap:6px;align-items:stretch;">
+      <input
+        id="code"
+        placeholder="Chọn, quét hoặc nhập mã sản phẩm"
+        autocomplete="off"
+        style="flex:1;min-width:0;"
+      >
+      <button
+        type="button"
+        class="btn btn-green"
+        id="scanBarcodeBtn"
+        onclick="startBarcodeScanner()"
+        style="white-space:nowrap;padding:9px 12px;"
+      >
+        📷 QUÉT MÃ
+      </button>
+    </div>
 
   </div>
 
 
   <div class="form-row">
 
-    <label>
+    <label for="name">
       Tên sản phẩm
     </label>
 
-    <<div class="form-row">
-  <label for="name">Tên sản phẩm</label>
-<input
-type="text"
-id="name"
-name="productName"
-placeholder="Nhập tên sản phẩm tại đây"
-autocomplete="off"
-readonly="false"  
-style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;"
->
-</div>
+    <input
+      type="text"
+      id="name"
+      name="productName"
+      placeholder="Nhập tên sản phẩm tại đây"
+      autocomplete="off"
+      style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;"
+    >
 
   </div>
 
@@ -622,12 +630,12 @@ style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;
     ></textarea>
 
   </div>
-<div style="display:flex;gap:8px;">
+<div style="display:flex;gap:8px;margin-top:12px;">
 
   <button
     type="button"
     class="btn btn-gray"
-    style="flex:1;"
+    style="flex:1;min-height:42px;display:block;"
     onclick="clearForm();message('Đã làm mới biểu mẫu.','success');"
   >
     🔄 LÀM MỚI
@@ -636,7 +644,7 @@ style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;
   <button
     type="button"
     class="btn btn-green"
-    style="flex:2;"
+    style="flex:2;min-height:42px;display:block;"
     onclick="saveLot()"
   >
     💾 LƯU SỐ LÔ
@@ -645,6 +653,7 @@ style="width:100%; min-height:45px; font-size:16px; color:#222; background:#fff;
 </div>
 
 
+</div>
 </div>
 
 
@@ -946,6 +955,72 @@ function searchProduct(){
 
 
 /* =========================
+   QUÉT MÃ VẠCH BẰNG CAMERA ANDROID
+========================= */
+function startBarcodeScanner(){
+  try {
+    if (window.AndroidScanner &&
+        typeof window.AndroidScanner.startScanner === "function") {
+      window.AndroidScanner.startScanner();
+      return;
+    }
+
+    message(
+      "Nút quét đã hiển thị nhưng APK chưa kết nối camera. Cần bổ sung AndroidScanner trong MainActivity.java và build lại APK.",
+      "error"
+    );
+  } catch (err) {
+    message(
+      "Không mở được camera: " + ((err && err.message) || err),
+      "error"
+    );
+  }
+}
+
+// Android gọi hàm này sau khi quét được mã vạch.
+function setScannedCode(code){
+  const scanned = String(code || "").trim();
+  if (!scanned) {
+    message("Không đọc được mã hàng. Vui lòng quét lại.", "error");
+    return;
+  }
+
+  const codeInput = document.getElementById("code");
+  const searchInput = document.getElementById("productSearch");
+  if (codeInput) codeInput.value = scanned;
+  if (searchInput) searchInput.value = scanned;
+
+  const results = document.getElementById("productResults");
+  if (results) results.classList.add("hidden");
+
+  google.script.run
+    .withSuccessHandler(function(product){
+      if (product && product.name) {
+        const nameInput = document.getElementById("name");
+        if (nameInput) nameInput.value = product.name;
+        if (searchInput) searchInput.value = scanned + " - " + product.name;
+        message("Đã quét mã: " + scanned, "success");
+      } else {
+        message(
+          "Đã quét mã " + scanned +
+          ". Vui lòng nhập tên sản phẩm nếu chưa có trong danh mục.",
+          "success"
+        );
+      }
+    })
+    .withFailureHandler(function(err){
+      message(
+        "Đã quét mã " + scanned +
+        ", nhưng chưa tra được tên hàng: " +
+        ((err && err.message) || err),
+        "error"
+      );
+    })
+    .getProduct(scanned);
+}
+
+
+/* =========================
    CHỌN SẢN PHẨM
 ========================= */
 
@@ -1136,6 +1211,17 @@ function clearForm(){
   document.getElementById(
     "qty"
   ).value = "1";
+
+  const results = document.getElementById("productResults");
+  if (results) {
+    results.innerHTML = "";
+    results.classList.add("hidden");
+  }
+
+  const codeInput = document.getElementById("code");
+  if (codeInput) {
+    codeInput.focus();
+  }
 
 }
 
