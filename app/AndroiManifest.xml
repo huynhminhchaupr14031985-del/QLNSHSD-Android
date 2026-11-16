@@ -1,15 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-feature
-    android:name="android.hardware.camera"
-    android:required="false" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Quyền kết nối Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Quyền camera phục vụ quét mã vạch -->
-    <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Camera không bắt buộc để cài đặt ứng dụng -->
     <uses-feature
@@ -24,6 +17,11 @@
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
+        <!-- Tự tải mô-đun quét mã vạch của Google Play Services -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -32,7 +30,6 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
