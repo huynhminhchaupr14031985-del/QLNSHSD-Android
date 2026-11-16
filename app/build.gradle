@@ -13,4 +13,14 @@ android {
         versionCode 1
         versionName '1.0'
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Thư viện quét mã vạch bằng camera Google
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
 }
