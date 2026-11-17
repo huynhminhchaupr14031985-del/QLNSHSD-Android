@@ -1,3 +1,4 @@
+
 name: Build Android APK
 
 on:
@@ -25,16 +26,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.0'
-
-      - name: Check MainActivity source
-        run: |
-          if [ ! -f app/MainActivity.java ]; then
-            echo "ERROR: Khong tim thay app/MainActivity.java"
-            exit 1
-          fi
-
-          echo "Da tim thay MainActivity.java"
-          grep -n "AndroidScannerBridge" app/MainActivity.java
 
       - name: Create Android Project
         run: |
@@ -77,24 +68,20 @@ jobs:
 
           android {
               namespace 'vn.qlnshsd.app'
-              compileSdk 35
+              compileSdk 34
 
               defaultConfig {
                   applicationId 'vn.qlnshsd.app'
                   minSdk 23
-                  targetSdk 35
-                  versionCode 4
-                  versionName '1.3'
+                  targetSdk 28
+                  versionCode 3
+                  versionName '1.2'
               }
 
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
               }
-          }
-
-          dependencies {
-              implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
           }
           EOF
 
@@ -177,6 +164,7 @@ jobs:
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.CAMERA" />
 
               <uses-feature
                   android:name="android.hardware.camera"
@@ -189,15 +177,10 @@ jobs:
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
-                  <meta-data
-                      android:name="com.google.mlkit.vision.DEPENDENCIES"
-                      android:value="barcode" />
-
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:configChanges="orientation|screenSize|keyboardHidden"
-                      android:windowSoftInputMode="adjustResize">
+                      android:configChanges="orientation|screenSize|keyboardHidden">
 
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -209,12 +192,132 @@ jobs:
           </manifest>
           EOF
 
-          # QUAN TRỌNG:
-          # Sao chép MainActivity.java đã sửa từ thư mục app.
-          # Không tạo MainActivity.java cũ bằng heredoc nữa.
-          cp app/MainActivity.java android/app/src/main/java/vn/qlnshsd/app/MainActivity.java
+          cat > android/app/src/main/java/vn/qlnshsd/app/MainActivity.java <<'EOF'
+          package vn.qlnshsd.app;
 
-          echo "Da sao chep MainActivity.java moi vao Android project"
+          import android.app.Activity;
+          import android.app.AlertDialog;
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.JsResult;
+          import android.webkit.JsPromptResult;
+          import android.webkit.ConsoleMessage;
+
+          public class MainActivity extends Activity {
+
+              private WebView webView;
+
+              private static final String APP_URL =
+                  "https://script.google.com/macros/s/AKfycbxYjSfJ5VItuCfpXS0HTLi2eBFS6Masai5n89qzW49RmHUdX8Gp9bSTKHaBd69F6eDA/exec";
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  webView = new WebView(this);
+                  setContentView(webView);
+
+                  WebSettings settings = webView.getSettings();
+
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                  settings.setSupportMultipleWindows(false);
+                  settings.setLoadsImagesAutomatically(true);
+
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.setWebChromeClient(new WebChromeClient() {
+
+                      @Override
+                      public boolean onJsAlert(
+                          WebView view,
+                          String url,
+                          String message,
+                          JsResult result
+                      ) {
+                          new AlertDialog.Builder(MainActivity.this)
+                              .setTitle("Thông báo")
+                              .setMessage(message)
+                              .setPositiveButton(
+                                  "Đồng ý",
+                                  (dialog, which) -> result.confirm()
+                              )
+                              .setOnCancelListener(
+                                  dialog -> result.cancel()
+                              )
+                              .show();
+
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onJsConfirm(
+                          WebView view,
+                          String url,
+                          String message,
+                          JsResult result
+                      ) {
+                          new AlertDialog.Builder(MainActivity.this)
+                              .setTitle("Xác nhận xóa số lô")
+                              .setMessage(message)
+                              .setPositiveButton(
+                                  "Đồng ý",
+                                  (dialog, which) -> result.confirm()
+                              )
+                              .setNegativeButton(
+                                  "Hủy",
+                                  (dialog, which) -> result.cancel()
+                              )
+                              .setOnCancelListener(
+                                  dialog -> result.cancel()
+                              )
+                              .show();
+
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onJsPrompt(
+                          WebView view,
+                          String url,
+                          String message,
+                          String defaultValue,
+                          JsPromptResult result
+                      ) {
+                          result.cancel();
+                          return true;
+                      }
+
+                      @Override
+                      public boolean onConsoleMessage(
+                          ConsoleMessage message
+                      ) {
+                          android.util.Log.d(
+                              "QLNSX_HSD",
+                              message.message()
+                          );
+                          return true;
+                      }
+                  });
+
+                  webView.loadUrl(APP_URL);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          EOF
 
       - name: Build APK
         run: |
